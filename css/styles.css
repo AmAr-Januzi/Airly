@@ -299,14 +299,15 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 .ac.m-off .ac-icon { fill: var(--muted); }
 .ac-text { fill: var(--text); font-weight: 700; pointer-events: none; }
 /* designer: full-width plan with the tools panel built into its right side */
-.studio { display: grid; grid-template-columns: minmax(0, 1fr) 340px; padding: 0; overflow: hidden; margin-bottom: 18px; height: min(80vh, 820px); min-height: 480px; }
-.studio-stage { position: relative; min-width: 0; height: 100%; }
+/* same plan height as before, and fixed, so the zoom never jumps when the side panel changes */
+.studio { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: minmax(0, 1fr); padding: 0; overflow: hidden; margin-bottom: 18px; height: min(68vh, 640px); min-height: 360px; }
+.studio-stage { position: relative; min-width: 0; min-height: 0; height: 100%; }
 .studio-stage .plan-area { height: 100%; min-height: 0; border: 0; border-radius: 0; }
 .studio-mode { position: absolute; top: 12px; left: 12px; z-index: 3; box-shadow: var(--shadow); background: var(--surface); }
 .studio-mode .seg svg { vertical-align: -4px; }
 .studio-zoom { position: absolute; bottom: 12px; left: 12px; z-index: 3; display: flex; gap: 6px; }
 .studio-zoom .btn { box-shadow: var(--shadow); background: var(--surface); }
-.studio-panel { border-left: 1px solid var(--border); background: var(--surface); padding: 14px 16px 18px; overflow-y: auto; height: 100%; }
+.studio-panel { border-left: 1px solid var(--border); background: var(--surface); padding: 14px 16px 18px; overflow-y: auto; height: 100%; min-height: 0; }
 .studio-panel h2 { margin-bottom: 10px; }
 .studio-panel .field-row { gap: 0 8px; }
 .studio-back { margin: -4px 0 8px -8px; }
@@ -332,8 +333,8 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 .room-wall:hover { stroke: color-mix(in srgb, var(--brand) 35%, transparent); }
 .room-wall-mark { stroke: var(--brand); stroke-width: .22; stroke-linecap: round; pointer-events: none; }
 @media (max-width: 900px) {
-  .studio { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
-  .studio-stage { height: 62vh; min-height: 320px; }
+  .studio { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; height: auto; min-height: 0; }
+  .studio-stage { height: 58vh; min-height: 300px; }
   .studio-panel { border-left: 0; border-top: 1px solid var(--border); height: auto; }
 }
 .inspector { padding: 16px; position: sticky; top: 76px; }
