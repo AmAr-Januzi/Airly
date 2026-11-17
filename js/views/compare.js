@@ -21,7 +21,7 @@
   Airly.compareSection = {
     /* closed: just the heading (nothing is calculated); open: pickers and the side-by-side table */
     html() {
-      const open = !!Airly.ui.compareOpen;
+      const open = Airly.ui.compareOpen !== false; // open unless you closed it
       const wrap = (body) => `<details class="card trace-card cmp-section" id="cmp-section"${open ? ' open' : ''}><summary><span aria-hidden="true">⚖</span> ${esc(t('nav.compare'))}</summary><div class="card-body">${body}</div></details>`;
       if (!open) return wrap('');
       const h = S(), p = P();
@@ -83,7 +83,7 @@
       const box = root.querySelector('#cmp-section');
       if (!box) return;
       box.addEventListener('toggle', () => {
-        if (!!Airly.ui.compareOpen === box.open) return;
+        if ((Airly.ui.compareOpen !== false) === box.open) return;
         Airly.ui.compareOpen = box.open;
         Airly.render();
       });

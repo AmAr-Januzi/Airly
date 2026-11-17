@@ -690,6 +690,72 @@
   }
 
   /* ---------- drawing ---------- */
+  /* ---------- drawing order ----------
+     Painting far-to-near by average depth goes wrong when a small object (furniture) stands near the end of
+     a long wall: the wall's middle can be nearer than the furniture although the wall is behind it, so the
+     furniture flickers or shows through walls while you turn. Where it matters we use exact rules instead:
+     a vertical surface hides nothing on the camera's side of it, and of two separated boxes the one on the
+     camera's side is in front. Items keep their depth order wherever no rule applies. */
+  function orderWith(n, rules) {
+    // rules: list of [a, b] = item a is drawn before item b; items 0..n-1 are in far-to-near order
+    if (!rules.length) return null;
+    const indeg = new Array(n).fill(0), next = Array.from({ length: n }, () => []);
+    rules.forEach(([a, b]) => { next[a].push(b); indeg[b]++; });
+    const heap = [];
+    const push = (v) => { heap.push(v); let i = heap.length - 1; while (i > 0) { const pa = (i - 1) >> 1; if (heap[pa] <= heap[i]) break; [heap[pa], heap[i]] = [heap[i], heap[pa]]; i = pa; } };
+    const pop = () => {
+      const top = heap[0], last = heap.pop();
+      if (heap.length) {
+        heap[0] = last;
+        let i = 0;
+        for (;;) {
+          const l = i * 2 + 1, r = l + 1;
+          let m = i;
+          if (l < heap.length && heap[l] < heap[m]) m = l;
+          if (r < heap.length && heap[r] < heap[m]) m = r;
+          if (m === i) break;
+          [heap[m], heap[i]] = [heap[i], heap[m]]; i = m;
+        }
+      }
+      return top;
+    };
+    for (let i = 0; i < n; i++) if (!indeg[i]) push(i);
+    const out = [], done = new Array(n).fill(false);
+    while (out.length < n) {
+      if (!heap.length) { for (let i = 0; i < n; i++) if (!done[i]) { push(i); break; } } // a loop of rules: fall back to depth order
+      const v = pop();
+      if (done[v]) continue;
+      done[v] = true; out.push(v);
+      next[v].forEach((w) => { if (--indeg[w] === 0 && !done[w]) push(w); });
+    }
+    return out;
+  }
+  /* the vertical plane a flat wall-like polygon lies in (null for floors, tops, caps …) */
+  function planeOf(pts) {
+    const p0 = pts[0];
+    const p1 = pts.find((q) => Math.hypot(q[0] - p0[0], q[2] - p0[2]) > 1e-4);
+    if (!p1 || !pts.some((q) => Math.abs(q[1] - p0[1]) > 1e-4)) return null;
+    const nx = -(p1[2] - p0[2]), nz = p1[0] - p0[0];
+    const len = Math.hypot(nx, nz);
+    if (pts.some((q) => Math.abs((q[0] - p0[0]) * nx + (q[2] - p0[2]) * nz) > 1e-3 * len)) return null;
+    return { nx: nx / len, nz: nz / len, x: p0[0], z: p0[2] };
+  }
+  const boxesOverlap = (a, b) => a && b && a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+  function screenBox(pps) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    pps.forEach((pp) => pp.forEach((q) => { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }));
+    return isFinite(x0) ? { x0, y0, x1, y1 } : null;
+  }
+  /* which side of a plane a footprint is on: 1, -1, or 0 when it crosses the plane */
+  function sideOf(pl, fp) {
+    let pos = 0, neg = 0;
+    [[fp.x0, fp.z0], [fp.x1, fp.z0], [fp.x1, fp.z1], [fp.x0, fp.z1]].forEach(([x, z]) => {
+      const d = (x - pl.x) * pl.nx + (z - pl.z) * pl.nz;
+      if (d > 0.005) pos++; else if (d < -0.005) neg++;
+    });
+    return pos === 4 ? 1 : neg === 4 ? -1 : 0;
+  }
+
   function draw() {
     const dpr = window.devicePixelRatio || 1;
     const W = canvas.clientWidth, H = canvas.clientHeight;
@@ -733,10 +799,42 @@
       const cq = V.point(pl.center[0], pl.center[1], pl.center[2]);
       if (!cq) return null;
       const boxes = pl.group.map((b) => { const q = V.point(b.c[0], b.c[1], b.c[2]); return { b, d: q ? q.d : Infinity }; }).filter((x) => x.d !== Infinity);
+      // world bounds of each part, and of the whole piece (its footprint on the floor)
+      const E = V.eye;
+      boxes.forEach((x) => {
+        const bb = { x0: Infinity, y0: Infinity, z0: Infinity, x1: -Infinity, y1: -Infinity, z1: -Infinity };
+        x.b.faces.forEach((fc) => fc.pts.forEach((q) => {
+          bb.x0 = Math.min(bb.x0, q[0]); bb.x1 = Math.max(bb.x1, q[0]);
+          bb.y0 = Math.min(bb.y0, q[1]); bb.y1 = Math.max(bb.y1, q[1]);
+          bb.z0 = Math.min(bb.z0, q[2]); bb.z1 = Math.max(bb.z1, q[2]);
+        }));
+        x.bb = bb;
+      });
+      const fp = boxes.reduce((a, x) => ({ x0: Math.min(a.x0, x.bb.x0), x1: Math.max(a.x1, x.bb.x1), z0: Math.min(a.z0, x.bb.z0), z1: Math.max(a.z1, x.bb.z1) }), { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity });
+      const sbox = screenBox(pl.group.flatMap((b) => b.faces.map((fc) => V.poly(fc.pts)).filter(Boolean)));
+      // parts far-to-near; where two parts are clearly apart along an axis, the one on the camera's side goes last
+      boxes.sort((a, c) => c.d - a.d);
+      const rules = [];
+      const AX = [['x0', 'x1', 0], ['y0', 'y1', 1], ['z0', 'z1', 2]];
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const A = boxes[i].bb, B = boxes[j].bb;
+          for (const [lo, hi, k] of AX) {
+            let near = null;
+            if (A[hi] <= B[lo] + 1e-4) near = E[k] > B[lo] ? 'B' : E[k] < A[hi] ? 'A' : null;
+            else if (B[hi] <= A[lo] + 1e-4) near = E[k] > A[lo] ? 'A' : E[k] < B[hi] ? 'B' : null;
+            if (near) { rules.push(near === 'B' ? [i, j] : [j, i]); break; }
+          }
+        }
+      }
+      const ord = orderWith(boxes.length, rules);
+      const ordered = ord ? ord.map((k) => boxes[k]) : boxes;
       return {
         depth: cq.d,
+        fp,
+        sbox,
         draw: () => {
-          boxes.sort((a, c) => c.d - a.d).forEach(({ b }) => {
+          ordered.forEach(({ b }) => {
             b.faces.map((fc) => {
               const E = V.eye;
               if (fc.n) { if (fc.n[0] * (E[0] - fc.mid[0]) + fc.n[1] * (E[2] - fc.mid[2]) <= 0) return null; } // side facing away
@@ -756,9 +854,27 @@
       const pp = V.poly(pl.pts);
       if (!pp) return null;
       pickHits.push({ pp, depth: depthOf(pp), door: pl.door || null });
-      return { depth: depthOf(pp) - (bias || 0), draw: () => poly(pp, pl.fill, pl.stroke, pl.lw) };
+      if (pl.plane === undefined) pl.plane = planeOf(pl.pts);
+      return { depth: depthOf(pp) - (bias || 0), plane: pl.plane, sbox: screenBox([pp]), draw: () => poly(pp, pl.fill, pl.stroke, pl.lw) };
     };
-    const paint = (list) => list.filter(Boolean).sort((x, y) => y.depth - x.depth).forEach((it) => it.draw());
+    const paint = (list) => {
+      const items = list.filter(Boolean).sort((x, y) => y.depth - x.depth);
+      const rules = [];
+      const E = V.eye;
+      items.forEach((g, gi) => {
+        if (!g.fp) return; // furniture only
+        items.forEach((w, wi) => {
+          if (!w.plane || !boxesOverlap(g.sbox, w.sbox)) return;
+          const side = sideOf(w.plane, g.fp);
+          if (!side) return;
+          const eye = (E[0] - w.plane.x) * w.plane.nx + (E[2] - w.plane.z) * w.plane.nz;
+          // furniture on the camera's side of the surface is in front of it, otherwise behind it
+          rules.push(Math.sign(eye) === side ? [wi, gi] : [gi, wi]);
+        });
+      });
+      const ord = orderWith(items.length, rules);
+      (ord ? ord.map((k) => items[k]) : items).forEach((it) => it.draw());
+    };
 
     if (!focus) {
       const lvls = [...new Set(scene.floors.map((f) => f.level))].sort((a, b) => a - b);
