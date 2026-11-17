@@ -91,8 +91,8 @@
       const b = this.bounds();
       const pad = this.mode === 'mini' ? 0.4 : 1.2;
       let x = b.x - pad, y = b.y - pad, w = Math.max(4, b.w + pad * 2), h = Math.max(3, b.h + pad * 2);
-      if (this.mode === 'design') {
-        // the designer plan fills the screen height, but keeps the zoom of the classic plan box
+      if (this.mode === 'design' || this.mode === 'sim') {
+        // the designer / simulator plan fills the screen height, but keeps the zoom of the classic plan box
         // (at most 68% of the window, 640 px): the extra height only shows more space around the house
         const r = this.svg.getBoundingClientRect();
         if (r.width > 0 && r.height > 0) {

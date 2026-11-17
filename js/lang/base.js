@@ -19,6 +19,7 @@
     'nav.rooms': ['Room Measurements', 'Matjet e dhomës'],
     'nav.acs': ['AC Configuration', 'Konfigurimi i kondicionerit'],
     'nav.simulator': ['AC Simulator', 'Simuluesi i kondicionerit'],
+    'sim.barTitle': ['AC Simulator — {name}', 'Simuluesi i kondicionerit — {name}'],
     'nav.analysis': ['Temperature Analysis', 'Analiza e temperaturës'],
     'nav.recommendations': ['Recommendations', 'Rekomandimet'],
     'nav.energy': ['Energy Consumption', 'Konsumi i energjisë'],

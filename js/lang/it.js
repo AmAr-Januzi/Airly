@@ -8,7 +8,7 @@
       "app.tagline": "Simulatore di climatizzazione domestica",
       "app.skip": "Vai al contenuto",
       "nav.dashboard": "Pannello", "nav.designer": "Progettazione casa", "nav.rooms": "Misure delle stanze", "nav.acs": "Configurazione climatizzatori",
-      "nav.simulator": "Simulatore", "nav.analysis": "Analisi della temperatura", "nav.recommendations": "Consigli", "nav.energy": "Consumo energetico",
+      "nav.simulator": "Simulatore", "sim.barTitle": "Simulatore — {name}", "nav.analysis": "Analisi della temperatura", "nav.recommendations": "Consigli", "nav.energy": "Consumo energetico",
       "nav.guide": "Guida all'uso", "nav.maintenance": "Manutenzione", "nav.settings": "Impostazioni", "nav.groupHome": "La mia casa",
       "nav.groupSim": "Simulazione", "nav.groupHelp": "Aiuto e cura", "nav.main": "Navigazione principale", "nav.purchase": "Confronto acquisto",
       "top.menu": "Menu", "top.save": "Salva casa", "top.projects": "Progetti", "top.language": "Lingua", "top.tempUnit": "Unità di temperatura",

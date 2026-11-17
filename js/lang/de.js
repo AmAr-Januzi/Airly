@@ -8,7 +8,7 @@
       "app.tagline": "Klimaanlagen-Simulator für Zuhause",
       "app.skip": "Zum Inhalt springen",
       "nav.dashboard": "Übersicht", "nav.designer": "Wohnungsplaner", "nav.rooms": "Raummaße", "nav.acs": "Klimageräte",
-      "nav.simulator": "Simulator", "nav.analysis": "Temperaturanalyse", "nav.recommendations": "Empfehlungen", "nav.energy": "Energieverbrauch",
+      "nav.simulator": "Simulator", "sim.barTitle": "Simulator — {name}", "nav.analysis": "Temperaturanalyse", "nav.recommendations": "Empfehlungen", "nav.energy": "Energieverbrauch",
       "nav.guide": "Bedienungstipps", "nav.maintenance": "Wartung", "nav.settings": "Einstellungen", "nav.groupHome": "Mein Zuhause",
       "nav.groupSim": "Simulation", "nav.groupHelp": "Hilfe & Pflege", "nav.main": "Hauptnavigation", "nav.purchase": "Kaufvergleich",
       "top.menu": "Menü", "top.save": "Zuhause speichern", "top.projects": "Projekte", "top.language": "Sprache", "top.tempUnit": "Temperatureinheit",

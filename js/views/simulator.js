@@ -11,32 +11,38 @@
       const live = TH.live;
       if (!live.model) live.rebuild(h);
       const speeds = Airly.SIM_SPEEDS;
-      el.innerHTML = head('nav.simulator', 'sim.lede') + `
-        <div class="toolbar card sim-controls" role="toolbar" aria-label="${esc(t('sim.controls'))}">
-          <div class="tool-group">${seasonTabs(h.env.season, 'setSeason')}</div>
-          ${levelTabs(false)}
-          <div class="tool-group">
-            <button type="button" class="btn primary" id="sim-toggle" data-action="simToggle"></button>
-            ${btn('simReset', `<span aria-hidden="true">↺</span> ${esc(t('sim.reset'))}`)}
-            <label for="sim-speed">${esc(t('sim.speed'))}</label>
-            <select id="sim-speed" data-bind="pref.simSpeed" data-num="1">${speeds.map((s) => `<option value="${s}"${Math.abs(+P().simSpeed - s) < 1e-6 ? ' selected' : ''}>${esc(speedLabel(s))}</option>`).join('')}</select>
+      // laid out like the Home Designer: one full-height box with the top bar, the plan and a side panel
+      el.innerHTML = `<h1 class="sr-only">${esc(t('nav.simulator'))}</h1>
+        <section class="studio card sim-studio" aria-label="${esc(t('sim.controls'))}">
+          <header class="v3d-head studio-head">
+            <div class="v3d-title"><h2><span aria-hidden="true">▶</span> ${esc(t('sim.barTitle', { name: h.name || t('home.defaultName') }))}</h2><p id="sim-status" class="muted small" aria-live="off"></p></div>
+            <div class="v3d-tools" role="toolbar" aria-label="${esc(t('sim.controls'))}">
+              <button type="button" class="btn primary" id="sim-toggle" data-action="simToggle"></button>
+              ${btn('simReset', `<span aria-hidden="true">↺</span> ${esc(t('sim.reset'))}`)}
+              ${btn('zoomOut', '−', 'icon', { plan: 'sim' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}
+              ${btn('zoomIn', '+', 'icon', { plan: 'sim' }).replace('<button', `<button aria-label="${esc(t('plan.zoomIn'))}"`)}
+              ${btn('zoomFit', esc(t('v3d.resetView')), '', { plan: 'sim' })}
+            </div>
+          </header>
+          <div class="studio-stage">
+            ${btn3d()}
+            <div id="sim-plan" class="plan-area"></div>
+            <div class="temp-legend sim-legend" aria-label="${esc(t('legend.temp'))}"><span>${esc(t('legend.cooler'))}</span><span class="scale" aria-hidden="true"></span><span>${esc(t('legend.warmer'))}</span></div>
           </div>
-          <div class="tool-group">
-            ${btn('doorsAll', esc(t('sim.openDoors')), 'ghost small', { open: '1' })}
-            ${btn('doorsAll', esc(t('sim.closeDoors')), 'ghost small', { open: '0' })}
-            ${toggle('pref.showCoverage', P().showCoverage, t('plan.coverage'))}
-            ${toggle('pref.comfortMap', P().comfortMap, t('comfort.map'))}
-          </div>
-          <div class="sim-clock" aria-live="off"><span class="muted">${esc(t('sim.elapsed'))}</span> <strong id="sim-time">0 min</strong>
-            <span class="muted">· ${esc(t('sim.clock'))}</span> <strong id="sim-clock">—</strong>
-            <span class="muted">· ${esc(t('dash.outside'))}</span> <strong id="sim-out">${esc(F().temp(TH.seasonOutside(h.env)))}</strong></div>
-        </div>
-        <div class="designer-body">
-          <div class="plan-wrap card">${btn3d()}<div id="sim-plan" class="plan-area"></div>
-            <div class="temp-legend" aria-label="${esc(t('legend.temp'))}"><span>${esc(t('legend.cooler'))}</span><span class="scale" aria-hidden="true"></span><span>${esc(t('legend.warmer'))}</span><span class="muted small">${esc(t('legend.tempNote'))}</span></div>
-          </div>
-          <aside class="inspector card" aria-label="${esc(t('sim.roomDetails'))}"><div id="sim-room" aria-live="polite"></div><h3>${esc(t('sim.acControls'))}</h3><div id="sim-acs">${this.acControls()}</div></aside>
-        </div>
+          <aside class="studio-panel" aria-label="${esc(t('sim.roomDetails'))}">
+            <section class="sim-sec">
+              <div class="tool-group">${seasonTabs(h.env.season, 'setSeason')}</div>
+              ${levelTabs(false)}
+              <div class="field"><label for="sim-speed">${esc(t('sim.speed'))}</label>
+                <select id="sim-speed" data-bind="pref.simSpeed" data-num="1">${speeds.map((s) => `<option value="${s}"${Math.abs(+P().simSpeed - s) < 1e-6 ? ' selected' : ''}>${esc(speedLabel(s))}</option>`).join('')}</select></div>
+              <div class="row-gap">${btn('doorsAll', esc(t('sim.openDoors')), 'ghost small', { open: '1' })}${btn('doorsAll', esc(t('sim.closeDoors')), 'ghost small', { open: '0' })}</div>
+              ${toggle('pref.showCoverage', P().showCoverage, t('plan.coverage'))}
+              ${toggle('pref.comfortMap', P().comfortMap, t('comfort.map'))}
+            </section>
+            <section class="studio-sec"><div id="sim-room" aria-live="polite"></div></section>
+            <section class="studio-sec"><h3>${esc(t('sim.acControls'))}</h3><div id="sim-acs">${this.acControls()}</div></section>
+          </aside>
+        </section>
         ${card(t('sim.chartTitle'), `<div id="sim-chart"></div>`)}
         ${estimateNote()}`;
       mountPlan('sim', el.querySelector('#sim-plan'), 'sim');
@@ -70,16 +76,18 @@
       if (!force && live.running && nowT - this.lastTick < 120) return; // ~8 redraws per second
       this.lastTick = nowT;
       btnEl.innerHTML = live.running ? `<span aria-hidden="true">⏸</span> ${esc(t('sim.pause'))}` : `<span aria-hidden="true">▶</span> ${esc(live.model && live.model.t > 0 ? t('sim.resume') : t('sim.start'))}`;
-      const te = document.getElementById('sim-time');
-      if (te) te.textContent = F().dur(live.model ? live.model.t : 0);
-      const ce = document.getElementById('sim-clock');
-      if (ce && live.model) {
-        const hr = live.hour();
-        const day = Math.floor((live.model.clock0 * 3600 + live.model.t) / 86400) + 1;
-        ce.textContent = (TH.sunAt(live.model.season, hr).e > 0 ? '☀ ' : '☾ ') + F().clock(hr) + ' · ' + t('sim.day', { n: day });
+      // status line in the top bar: time of day, day, season, outside temperature, simulated time
+      const st = document.getElementById('sim-status');
+      if (st) {
+        const h = S();
+        let clock = '';
+        if (live.model) {
+          const hr = live.hour();
+          const day = Math.floor((live.model.clock0 * 3600 + live.model.t) / 86400) + 1;
+          clock = (TH.sunAt(live.model.season, hr).e > 0 ? '☀ ' : '☾ ') + F().clock(hr) + ' · ' + t('sim.day', { n: day }) + ' · ';
+        }
+        st.textContent = `${clock}${t('season.' + h.env.season)} · ${t('dash.outside')} ${F().temp(live.model ? live.outside() : TH.seasonOutside(h.env))} · ${t('sim.elapsed')} ${F().dur(live.model ? live.model.t : 0)}`;
       }
-      const oe = document.getElementById('sim-out');
-      if (oe && live.model) oe.textContent = F().temp(live.outside());
       if (plans.sim) plans.sim.render();
       this.roomPanel();
       if (live.model) {

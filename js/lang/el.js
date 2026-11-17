@@ -8,7 +8,7 @@
       "app.tagline": "Προσομοιωτής κλιματισμού σπιτιού",
       "app.skip": "Μετάβαση στο περιεχόμενο",
       "nav.dashboard": "Πίνακας", "nav.designer": "Σχεδιασμός σπιτιού", "nav.rooms": "Διαστάσεις δωματίων", "nav.acs": "Ρύθμιση κλιματιστικών",
-      "nav.simulator": "Προσομοιωτής", "nav.analysis": "Ανάλυση θερμοκρασίας", "nav.recommendations": "Προτάσεις", "nav.energy": "Κατανάλωση ενέργειας",
+      "nav.simulator": "Προσομοιωτής", "sim.barTitle": "Προσομοιωτής — {name}", "nav.analysis": "Ανάλυση θερμοκρασίας", "nav.recommendations": "Προτάσεις", "nav.energy": "Κατανάλωση ενέργειας",
       "nav.guide": "Οδηγός χρήσης", "nav.maintenance": "Συντήρηση", "nav.settings": "Ρυθμίσεις", "nav.groupHome": "Το σπίτι μου",
       "nav.groupSim": "Προσομοίωση", "nav.groupHelp": "Βοήθεια & φροντίδα", "nav.main": "Κύρια πλοήγηση", "nav.purchase": "Σύγκριση αγοράς",
       "top.menu": "Μενού", "top.save": "Αποθήκευση σπιτιού", "top.projects": "Έργα", "top.language": "Γλώσσα", "top.tempUnit": "Μονάδα θερμοκρασίας",
