@@ -145,13 +145,23 @@
         flip.forEach((a) => { a.mode = mode; a.target = mode === 'heat' ? h.env.desiredHeat : Math.min(a.target, h.env.desiredCool); });
       }
       Airly.views.recommendations.season = null;
+      Airly.views.recommendations.page = 0;
       Airly.views.recommendations.compareResult = null;
       TH.live.reset(h);
       store.commit('season');
       render();
     },
     ecoTab: (d) => { Airly.views.eco.tab = d.tab; render(); const b = document.getElementById('etab-' + d.tab); if (b) b.focus(); },
-    recSeason: (d) => { Airly.views.recommendations.season = d.season; Airly.views.recommendations.compareResult = null; render(); },
+    recSeason: (d) => { Airly.views.recommendations.season = d.season; Airly.views.recommendations.page = 0; Airly.views.recommendations.compareResult = null; render(); },
+    recPage: (d) => {
+      Airly.views.recommendations.page = +d.page;
+      render();
+      // keep the list in view and the keyboard on the pager
+      const box = document.querySelector('.recs-layout');
+      if (box) box.scrollIntoView({ block: 'nearest' });
+      const cur = document.querySelector('.pager-num.active');
+      if (cur) cur.focus({ preventScroll: true });
+    },
     addRoom: () => { addRoom(document.getElementById('new-room-type').value); render(); },
     addRoomQuick: () => { const r = addRoom('custom'); ui.roomId = r.id; render(); },
     addDoor: () => {
@@ -276,6 +286,19 @@
       if (o.w > L) o.w = L;
       ui.sel = { kind: 'opening', id: o.id, roomId: r.id, type: d.type };
       store.commit('add'); render();
+    },
+    printView: (d) => {
+      ui.printView = d.view;
+      const v = Airly.views.designer;
+      if (v && ui.view === 'designer') v.inspector();
+      const b = document.querySelector(`[data-action="printView"][data-view="${d.view}"]`);
+      if (b) b.focus();
+    },
+    printDesign: () => {
+      if (!store.state.rooms.length) return toast(t('toast.needRoom'));
+      const sel = document.getElementById('print-room');
+      ui.printRoom = sel ? sel.value : '';
+      Airly.share.printDesign({ view: ui.printView === '3d' ? '3d' : '2d', room: ui.printView === '3d' ? ui.printRoom : '' });
     },
     toggleFridge: (d) => {
       const f = (store.state.furniture || []).find((x) => x.id === d.id);

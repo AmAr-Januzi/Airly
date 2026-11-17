@@ -9,6 +9,7 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const WALL_INSET = 0.05;
   const SILL = 0.9;
+  const FRAME = [30, 32, 36]; // black window frames
   const MAX_PARTICLES = 700;
 
   const cam = { yaw: -0.65, pitch: 0.72, dist: 20, tx: 0, ty: 0, tz: 0, fov: 1 };
@@ -437,7 +438,31 @@
           if (type === 'window') {
             const top = Math.min(SILL + o.h, r.height);
             quad(s0, s1, 0, Math.min(SILL, Hh), wallFill);
-            if (Hh > SILL) quad(s0, s1, SILL, Math.min(top, Hh), shade(colors.glass, 1.05, 0.38), { glass: true });
+            if (Hh > SILL) {
+              // a real-looking window: black frame (and a middle bar on wide windows) around tinted glass panes
+              const y0 = SILL, y1 = Math.min(top, Hh), cut = y1 < top; // walls cut low: no top bar
+              const fw = Math.min(0.06, (s1 - s0) / 6, (y1 - y0) / 4);
+              const frame = shade(FRAME, k), frameEdge = shade(FRAME, 0.6);
+              const bar = (a0, a1, b0, b1) => { if (a1 - a0 > 0.005 && b1 - b0 > 0.005) polys.push({ room: r.id, pts: [at(a0, b0), at(a1, b0), at(a1, b1), at(a0, b1)], fill: frame, stroke: frameEdge, lw: 0.6, frame: true }); };
+              const g0 = y0 + fw, g1 = cut ? y1 : y1 - fw;
+              bar(s0, s1, y0, g0); // sill bar
+              if (!cut) bar(s0, s1, g1, y1); // head bar
+              bar(s0, s0 + fw, g0, g1); // sides
+              bar(s1 - fw, s1, g0, g1);
+              const panes = s1 - s0 > 0.9 ? 2 : 1;
+              const inner0 = s0 + fw, inner1 = s1 - fw, mw = fw * 0.8;
+              const pw = (inner1 - inner0 - (panes - 1) * mw) / panes;
+              for (let i = 0; i < panes; i++) {
+                const a0 = inner0 + i * (pw + mw), a1 = a0 + pw;
+                if (i > 0) bar(a0 - mw, a0, g0, g1); // middle bar
+                if (a1 - a0 < 0.02 || g1 - g0 < 0.02) continue;
+                polys.push({ room: r.id, pts: [at(a0, g0), at(a1, g0), at(a1, g1), at(a0, g1)], fill: shade(colors.glass, 1.12, 0.3), stroke: shade(colors.glass, 1.4, 0.35), lw: 0.6, glass: true });
+                // soft diagonal reflection on the pane, just in front of the glass
+                const w = a1 - a0, hh = g1 - g0, nx = L.nx * 0.004, nz = L.nz * 0.004;
+                const p = (s, y) => { const q = at(s, y); return [q[0] + nx, q[1], q[2] + nz]; };
+                polys.push({ room: r.id, pts: [p(a0 + w * 0.18, g1), p(a0 + w * 0.42, g1), p(a0 + w * 0.12, g0 + hh * 0.25), p(a0, g0 + hh * 0.25), p(a0, g0 + hh * 0.55)].filter(Boolean), fill: 'rgba(255,255,255,0.13)', stroke: null, glass: true, shine: true });
+              }
+            }
             if (Hh > top) quad(s0, s1, top, Hh, wallFill);
           } else {
             const dh = Math.min(o.h, r.height);
@@ -453,7 +478,7 @@
               const hx = L.ax + ux * hs, hz = L.az + uz * hs;
               const ex = hx + L.nx * o.w * k, ez = hz + L.nz * o.w * k;
               const top = Math.min(dh, Hh + 0.6);
-              polys.push({ room: r.id, inner: true, door: ref, pts: [[hx, 0, hz], [ex, 0, ez], [ex, top, ez], [hx, top, hz]], fill: shade(colors.door, lambert(ux, 0, uz), focus === r.id ? 0.35 : 1), stroke: shade(colors.door, 0.7, focus === r.id ? 0.6 : 1) });
+              polys.push({ room: r.id, inner: true, door: ref, leaf: true, pts: [[hx, 0, hz], [ex, 0, ez], [ex, top, ez], [hx, top, hz]], fill: shade(colors.door, lambert(ux, 0, uz), focus === r.id ? 0.35 : 1), stroke: shade(colors.door, 0.7, focus === r.id ? 0.6 : 1) });
             } else {
               quad(s0, s1, 0, Math.min(dh, Hh), shade(colors.door, k), { door: ref });
             }
@@ -857,7 +882,7 @@
       if (pl.group) return groupItem(pl);
       const pp = V.poly(pl.pts);
       if (!pp) return null;
-      pickHits.push({ pp, depth: depthOf(pp), door: pl.door || null });
+      pickHits.push({ pp, depth: depthOf(pp), door: pl.door || null, leaf: !!pl.leaf });
       if (pl.plane === undefined) pl.plane = planeOf(pl.pts);
       return { depth: depthOf(pp) - (bias || 0), plane: pl.plane, sbox: screenBox([pp]), draw: () => poly(pp, pl.fill, pl.stroke, pl.lw) };
     };
@@ -1334,7 +1359,7 @@
         if (fr && fr.kind === 'fridge') toggleFridge(fr.id);
         else if (hit && hit.door) {
           const dd = doorInfo(hit.door);
-          if (focus && dd && dd.d.open && dd.other) goThrough(hit.door);
+          if (focus && dd && dd.d.open && dd.other && !hit.leaf) goThrough(hit.door);
           else toggleDoor(hit.door.room, hit.door.id);
         }
         else if (!focus && hit && hit.room) enterRoom(hit.room);
@@ -1449,8 +1474,46 @@
     if (dlg && dlg.open && dlg.classList.contains('inline')) dlg.close();
   }
 
+  /* A picture of the 3D view for printing: the whole house (roomId empty) or the inside of one room.
+     Works whether or not the 3D view is showing; the view you had is put back afterwards. */
+  function snapshot(roomId) {
+    let temp = null;
+    if (!dlg || !dlg.open) {
+      temp = document.createElement('div');
+      temp.style.cssText = 'position:fixed;left:-10000px;top:0;width:1400px;height:900px;';
+      document.body.appendChild(temp);
+      open(temp);
+    }
+    const saved = { cam: Object.assign({}, cam), focus, wallMode, savedWallMode, particles, showLevel };
+    particles = []; // a clean picture without the moving air dots
+    showLevel = 'all';
+    readColors();
+    focus = null;
+    if (roomId) enterRoom(roomId);
+    else { wallMode = 'full'; fit(); }
+    draw();
+    // paint it on the page colour so it does not come out transparent
+    const out = document.createElement('canvas');
+    out.width = canvas.width; out.height = canvas.height;
+    const o = out.getContext('2d');
+    o.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#1b1b19';
+    o.fillRect(0, 0, out.width, out.height);
+    o.drawImage(canvas, 0, 0);
+    const url = out.toDataURL('image/png');
+    if (temp) {
+      dlg.close(); // hands the 3D window back to the page
+      temp.remove();
+    } else {
+      Object.assign(cam, saved.cam);
+      focus = saved.focus; wallMode = saved.wallMode; savedWallMode = saved.savedWallMode; particles = saved.particles; showLevel = saved.showLevel;
+      updatePanel(true); renderACs(); renderDoors();
+    }
+    return url;
+  }
+
   Airly.view3d = {
     open,
+    snapshot,
     attach,
     closeInline,
     /* start walking (used by the 2D plan's "Walk around" button) */

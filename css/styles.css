@@ -552,6 +552,17 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 .tab.active { color: var(--brand-ink); border-bottom-color: var(--brand); }
 .eco-tabs { margin: 4px 0 18px; }
 .eco-panel > .view-head { margin-top: 0; }
+/* the sections inside an ECO tab get the same spacing as on other pages */
+.eco-panel { display: flex; flex-direction: column; gap: 18px; }
+/* pages of recommendations */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.pager-nums { display: flex; gap: 4px; flex-wrap: wrap; }
+.pager-num { font: inherit; font-weight: 650; min-width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+.pager-num:hover { border-color: var(--brand); }
+.pager-num.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.pager-num:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pager .btn[disabled] { opacity: .45; cursor: default; }
+.pager-info { margin: 8px 0 0; text-align: center; }
 .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
 .tips { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 .tips li::marker { color: var(--brand); }
@@ -711,3 +722,15 @@ dialog::backdrop { background: rgba(10, 10, 8, .45); }
 .confirm-actions .btn { flex: 1; justify-content: center; min-height: 44px; }
 @keyframes confirm-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .confirm-dlg[open] { animation: none; } }
+
+/* designer: Print / PDF section */
+.print-sec { display: grid; gap: 10px; }
+.print-sec .segmented { width: 100%; }
+.print-sec .segmented .seg { flex: 1; justify-content: center; }
+.print-sec .seg svg { width: 16px; height: 16px; vertical-align: -3px; }
+.print-sec .field { margin: 0; }
+.print-btn { width: 100%; justify-content: center; }
+@media print {
+  .r-shot { margin: 0 0 10px; page-break-inside: avoid; }
+  .r-shot img { width: 100%; height: auto; max-height: 150mm; object-fit: contain; border-radius: 6px; border: 1px solid #ccc; display: block; }
+}

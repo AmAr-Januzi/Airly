@@ -18,6 +18,25 @@
   }
   const FURN_ICON = { sofa: '🛋', bed: '🛏', singleBed: '🛏', armchair: '💺', table: '🍽', desk: '🖥', wardrobe: '🗄', shelf: '📚', kitchen: '🍳', fridge: '🧊', tv: '📺', stairs: '🪜', toilet: '🚽', sink: '🚰', bathtub: '🛁', shower: '🚿', washer: '🧺' };
 
+  /* Print / save as PDF: 2D plan or 3D view (whole house or one room), with what is in it */
+  function printSection() {
+    const h = S();
+    const view = Airly.ui.printView === '3d' ? '3d' : '2d';
+    const cur = Airly.ui.printRoom && h.rooms.some((r) => r.id === Airly.ui.printRoom) ? Airly.ui.printRoom : '';
+    const multi = (h.levels || 1) > 1;
+    const roomPick = view === '3d' ? `<div class="field"><label for="print-room">${esc(t('print.room'))}</label><select id="print-room">
+        <option value="">${esc(t('print.allRooms'))}</option>
+        ${h.rooms.map((r) => `<option value="${r.id}"${r.id === cur ? ' selected' : ''}>${esc(Airly.roomName(r))}${multi ? ' · ' + esc(Airly.levelName(r.level || 0)) : ''}</option>`).join('')}
+      </select></div>` : '';
+    return `<section class="studio-sec print-sec"><h3>${esc(t('print.section'))}</h3>
+      <div class="segmented" role="group" aria-label="${esc(t('print.what'))}">${['2d', '3d'].map((v) =>
+        `<button type="button" class="seg ${v === view ? 'active' : ''}" aria-pressed="${v === view}" data-action="printView" data-view="${v}">${v === '2d' ? '▦ ' + esc(t('print.view2d')) : Airly.kit.CUBE + ' ' + esc(t('print.view3d'))}</button>`).join('')}</div>
+      ${roomPick}
+      <button type="button" class="btn primary print-btn" data-action="printDesign"${h.rooms.length ? '' : ' disabled'}><span aria-hidden="true">🖨</span> ${esc(t('print.button'))}</button>
+      <small class="hint">${esc(t('print.hint'))}</small>
+    </section>`;
+  }
+
   /* Side panel when nothing (or a room wall) is selected: everything you can add */
   function buildPanel() {
     const p = P();
@@ -59,6 +78,7 @@
         ${toggle('pref.showCoverage', p.showCoverage, t('plan.coverage'))}
         <div class="row-gap">${btn('resetLayout', esc(t('designer.resetLayout')), 'danger-ghost small')}</div>
       </section>
+      ${printSection()}
       <p class="muted small">${esc(t('designer.help'))}</p>`;
   }
   /* open / close a door with one click */

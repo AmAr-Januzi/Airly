@@ -4,22 +4,37 @@
   const Airly = window.Airly;
   const { t, S, P, TH, esc, F, field, text, btn, card, seasonTabs, badge, estimateNote, head, perfStatus, views } = Airly.kit;
 
+  const PER_PAGE = 4; // recommendations shown per page
+
   views.recommendations = {
     season: null,
+    page: 0,
     compareResult: null,
     render(el) {
       const h = S();
       const season = this.season || h.env.season;
       const recs = Airly.advisor.recommend(h, season);
       const an = Airly.advisor.analyze(h, season);
-      const list = recs.map((r, i) => `<article class="rec rec-${r.severity}">
+      // a few recommendations per page, with Previous / page numbers / Next below
+      const pages = Math.max(1, Math.ceil(recs.length / PER_PAGE));
+      this.page = Math.min(Math.max(0, this.page || 0), pages - 1);
+      const first = this.page * PER_PAGE;
+      const list = recs.slice(first, first + PER_PAGE).map((r, j) => {
+        const i = first + j; // index in the full list (used by "Apply")
+        return `<article class="rec rec-${r.severity}">
           <div class="rec-head">${badge(r.severity, t('sev.' + r.severity))}<h3>${esc(t('rec.' + r.type + '.title', r.params))}</h3></div>
           <p><strong>${esc(t('rec.why'))}</strong> ${esc(t('rec.' + r.type + '.why', r.params))}</p>
           ${r.action ? btn('applyRec', esc(t('rec.apply')), 'small', { idx: i, season }) : ''}
-        </article>`).join('');
+        </article>`;
+      }).join('');
+      const pager = pages > 1 ? `<nav class="pager" aria-label="${esc(t('rec.pages'))}">
+          <button type="button" class="btn small ghost" data-action="recPage" data-page="${this.page - 1}"${this.page === 0 ? ' disabled' : ''}><span aria-hidden="true">‹</span> ${esc(t('rec.prev'))}</button>
+          <span class="pager-nums">${Array.from({ length: pages }, (_, k) => `<button type="button" class="pager-num${k === this.page ? ' active' : ''}" data-action="recPage" data-page="${k}"${k === this.page ? ' aria-current="page"' : ''} aria-label="${esc(t('rec.pageOf', { p: k + 1, n: pages }))}">${k + 1}</button>`).join('')}</span>
+          <button type="button" class="btn small ghost" data-action="recPage" data-page="${this.page + 1}"${this.page === pages - 1 ? ' disabled' : ''}>${esc(t('rec.next'))} <span aria-hidden="true">›</span></button>
+        </nav><p class="muted small pager-info">${esc(t('rec.pageOf', { p: this.page + 1, n: pages }))} · ${esc(t('rec.count', { n: recs.length }))}</p>` : '';
       el.innerHTML = head('nav.recommendations', 'rec.lede', seasonTabs(season, 'recSeason')) + `
         <div class="grid-2 recs-layout">
-          ${card(t('rec.listTitle'), list || `<p class="muted">${esc(t('dash.noRecs'))}</p>`)}
+          ${card(t('rec.listTitle'), list ? list + pager : `<p class="muted">${esc(t('dash.noRecs'))}</p>`)}
           ${card(t('faq.title'), this.faq(an, recs, season))}
         </div>
         ${this.scenarios()}

@@ -95,6 +95,84 @@
     </article>`;
   }
 
+  /* =====================================================
+   * Print / PDF of the design: a picture (2D plan or 3D view of the house or one room)
+   * and what is in it — rooms, AC units and their capacity, furniture, doors and windows.
+   * ===================================================== */
+  function buildDesign(opts) {
+    const h = Airly.store.state;
+    const is3d = opts.view === '3d';
+    const room = opts.room ? Airly.store.room(opts.room) : null;
+    const name = h.name || t('home.defaultName');
+    const date = new Date().toLocaleDateString(Airly.i18n.locale(), { year: 'numeric', month: 'long', day: 'numeric' });
+    const rooms = room ? [room] : h.rooms;
+    const multi = (h.levels || 1) > 1;
+    const inRoom = (r) => (h.furniture || []).filter((f) => (f.level || 0) === (r.level || 0) && f.x + f.w / 2 > r.x && f.x + f.w / 2 < r.x + r.length && f.y + f.d / 2 > r.y && f.y + f.d / 2 < r.y + r.width);
+    const acsOf = (r) => h.acs.filter((a) => a.roomId === r.id);
+    const furnList = (list) => {
+      if (!list.length) return '—';
+      const n = {};
+      list.forEach((f) => (n[f.kind] = (n[f.kind] || 0) + 1));
+      return Object.keys(n).map((k) => esc(t('furn.' + k)) + (n[k] > 1 ? ' ×' + n[k] : '')).join(', ');
+    };
+    const acs = room ? acsOf(room) : h.acs;
+    const furn = rooms.flatMap(inRoom);
+    const area = rooms.reduce((s, r) => s + r.length * r.width, 0);
+    const btu = acs.reduce((s, a) => s + a.btu, 0);
+    const doors = rooms.reduce((s, r) => s + r.doors.length, 0), wins = rooms.reduce((s, r) => s + r.windows.length, 0);
+    const what = (is3d ? t('print.view3d') : t('print.view2d')) + ' — ' + (room ? Airly.roomName(room) : t('print.allRooms'));
+
+    let pics;
+    if (is3d) {
+      const url = Airly.view3d.snapshot(room ? room.id : null);
+      pics = `<figure class="r-shot"><img src="${url}" alt="${esc(what)}"></figure>`;
+    } else {
+      pics = planSVGs(h).map((x) => `<figure><figcaption>${esc(x.name)}</figcaption>${x.svg}</figure>`).join('');
+    }
+    return `<article class="report">
+      <header class="r-head"><div><div class="r-brand">Airly</div><h1>${esc(t('print.title', { name }))}</h1><p>${esc(what)} · ${esc(date)}</p></div></header>
+      <section class="r-plans">${pics}</section>
+      <section><h2>${esc(t('report.summary'))}</h2>
+        <table class="r-kv"><tbody>
+          <tr><th>${esc(t('dash.rooms'))}</th><td>${rooms.length} · ${F().num(area, 1)} m²${!room && multi ? ' · ' + h.levels + ' ' + esc(t('report.floors')) : ''}</td></tr>
+          <tr><th>${esc(t('dash.acUnits'))}</th><td>${acs.length}${acs.length ? ' · ' + esc(F().btu(btu)) : ''}</td></tr>
+          <tr><th>${esc(t('print.furnCount'))}</th><td>${furn.length}</td></tr>
+          <tr><th>${esc(t('print.doorsWindows'))}</th><td>${doors} / ${wins}</td></tr>
+        </tbody></table>
+      </section>
+      <section><h2>${esc(t('report.rooms'))}</h2>
+        <table><thead><tr><th>${esc(t('an.room'))}</th>${multi ? `<th>${esc(t('cmp.floor'))}</th>` : ''}<th>${esc(t('report.size'))}</th><th>${esc(t('dash.acUnits'))}</th><th>${esc(t('studio.furniture'))}</th><th>${esc(t('print.doorsWindows'))}</th></tr></thead><tbody>
+        ${rooms.map((r) => { const a = acsOf(r); return `<tr><th>${esc(Airly.roomName(r))}</th>${multi ? `<td>${esc(Airly.levelName(r.level || 0))}</td>` : ''}<td class="nowrap">${F().num(r.length, 1)} × ${F().num(r.width, 1)} m<br>${F().num(r.length * r.width, 1)} m²</td><td>${a.length ? a.length + ' · ' + esc(F().btu(a.reduce((s, x) => s + x.btu, 0))) : '—'}</td><td>${furnList(inRoom(r))}</td><td>${r.doors.length} / ${r.windows.length}</td></tr>`; }).join('')}
+        </tbody></table>
+      </section>
+      <section><h2>${esc(t('report.acs'))}</h2>
+        ${acs.length ? `<table><thead><tr><th>${esc(t('ac.unit'))}</th><th>${esc(t('ac.room'))}</th><th>${esc(t('ac.capacity'))}</th><th>${esc(t('ac.mode'))}</th><th>${esc(t('ac.target'))}</th><th>${esc(t('ac.power'))}</th></tr></thead><tbody>
+        ${acs.map((a) => { const r = Airly.store.room(a.roomId); return `<tr><th>${h.acs.indexOf(a) + 1}${a.model ? ' · ' + esc(a.model) : ''}</th><td>${esc(r ? Airly.roomName(r) : '—')}</td><td>${esc(F().btu(a.btu))}</td><td>${esc(t('mode.' + a.mode))}</td><td>${esc(F().temp(a.target))}</td><td>${esc(((s) => s.charAt(0).toUpperCase() + s.slice(1))(t(a.on ? 'ac.on' : 'ac.off')))}</td></tr>`; }).join('')}
+        </tbody></table>` : `<p>${esc(t('acs.none'))}</p>`}
+      </section>
+      <p class="r-foot">${esc(t('common.estimateNote'))}</p>
+    </article>`;
+  }
+  function printDesign(opts) {
+    let box = document.getElementById('print-report');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'print-report';
+      document.body.appendChild(box);
+    }
+    try {
+      box.innerHTML = buildDesign(opts || {});
+    } catch (e) {
+      console.error(e);
+      Airly.toast(t('error.render'), 'bad');
+      return;
+    }
+    // wait for the picture to be ready, then open the print window (where "Save as PDF" downloads it)
+    const img = box.querySelector('img');
+    const go = () => setTimeout(() => window.print(), 50);
+    if (img && img.decode) img.decode().then(go, go); else go();
+  }
+
   function printReport() {
     let box = document.getElementById('print-report');
     if (!box) {
@@ -211,5 +289,5 @@
     return true;
   }
 
-  Airly.share = { printReport, openShareDialog, importFromHash, encode, decode };
+  Airly.share = { printReport, printDesign, buildDesign, openShareDialog, importFromHash, encode, decode };
 })();
