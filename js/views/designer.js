@@ -83,7 +83,7 @@
 
   views.designer = {
     render(el) {
-      el.innerHTML = head('nav.designer', 'designer.lede') + `
+      el.innerHTML = head('nav.designer') + `
         <section class="studio card" aria-label="${esc(t('designer.tools'))}">
           <div class="studio-stage">
             <div class="studio-mode segmented" role="group" aria-label="2D / 3D">
