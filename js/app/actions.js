@@ -508,6 +508,12 @@
       store.commit('struct'); render();
       toast(t('calib.applied'), 'good');
     },
+    designerWalk: () => {
+      if (!store.state.rooms.length) return toast(t('toast.needRoom'));
+      ui.designer3d = true;
+      render();
+      Airly.view3d.walk();
+    },
     designer3d: () => {
       if (!store.state.rooms.length) return toast(t('toast.needRoom'));
       ui.designer3d = true;

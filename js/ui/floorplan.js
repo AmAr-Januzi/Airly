@@ -137,7 +137,8 @@
       const h = this.home;
       const sel = this.sel || {};
       const live = Airly.thermal.live;
-      const showTemps = this.mode !== 'design' && live.model && (live.running || live.model.t > 0);
+      // temperatures once a simulation has started (in the designer too); "Reset" brings the plain plan back
+      const showTemps = live.model && (live.running || live.model.t > 0);
       const prefs = Airly.store.prefs;
       const design = this.mode === 'design';
       const active = document.activeElement;

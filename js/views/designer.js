@@ -86,13 +86,19 @@
       Airly.ui.designer3d = false;
       el.innerHTML = `<h1 class="sr-only">${esc(t('nav.designer'))}</h1>
         <section class="studio card" aria-label="${esc(t('designer.tools'))}">
-          <div class="studio-stage">
-            <button type="button" class="btn plan-3d-btn" data-action="designer3d" title="${esc(t('v3d.open'))}">${Airly.kit.CUBE}<span>3D</span><span class="sr-only"> — ${esc(t('v3d.open'))}</span></button>
-            <div class="studio-zoom">
+          <header class="v3d-head studio-head">
+            <div class="v3d-title"><h2><span aria-hidden="true">▦</span> ${esc(t('plan2d.title', { name: S().name || t('home.defaultName') }))}</h2><p id="d2-status" class="muted small">${esc(this.statusLine())}</p></div>
+            <div class="v3d-tools" role="toolbar" aria-label="${esc(t('v3d.tools'))}">
+              ${btn('simToggle', this.simLabel(), 'primary').replace('<button', '<button id="d2-sim"')}
+              ${btn('simReset', `<span aria-hidden="true">↺</span> ${esc(t('sim.reset'))}`)}
+              ${btn('designerWalk', `<span aria-hidden="true">🚶</span> ${esc(t('v3d.walk'))}`)}
               ${btn('zoomOut', '−', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}
               ${btn('zoomIn', '+', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomIn'))}"`)}
-              ${btn('zoomFit', esc(t('plan.fit')), '', { plan: 'designer' })}
+              ${btn('zoomFit', esc(t('v3d.resetView')), '', { plan: 'designer' })}
             </div>
+          </header>
+          <div class="studio-stage">
+            <button type="button" class="btn plan-3d-btn" data-action="designer3d" title="${esc(t('v3d.open'))}">${Airly.kit.CUBE}<span>3D</span><span class="sr-only"> — ${esc(t('v3d.open'))}</span></button>
             <div id="designer-plan" class="plan-area"></div>
           </div>
           <aside class="studio-panel" id="inspector" aria-live="polite" aria-label="${esc(t('insp.title'))}"></aside>
@@ -106,6 +112,30 @@
     },
     refresh() {
       if (plans.designer) plans.designer.render();
+    },
+    /* the same status line as the 3D view: time of day, season, outside temperature, simulated time */
+    statusLine() {
+      const h = S(), live = TH.live;
+      const hr = live.model ? live.hour() : null;
+      const clock = hr != null ? (TH.sunAt(live.model.season, hr).e > 0 ? '☀ ' : '☾ ') + F().clock(hr) + ' · ' : '';
+      return `${clock}${t('season.' + h.env.season)} · ${t('dash.outside')} ${F().temp(live.model ? live.outside() : TH.seasonOutside(h.env))} · ${t('sim.elapsed')} ${F().dur(live.model ? live.model.t : 0)}`;
+    },
+    simLabel() {
+      const live = TH.live;
+      const started = live.model && live.model.t > 0;
+      return live.running ? `<span aria-hidden="true">⏸</span> ${esc(t('sim.pause'))}` : `<span aria-hidden="true">▶</span> ${esc(t(started ? 'sim.resume' : 'sim.start'))}`;
+    },
+    /* while the simulation runs: refresh the status, the button and the room temperatures a few times a second */
+    tick() {
+      const now = performance.now();
+      if (this._lastTick && now - this._lastTick < 250 && TH.live.running) return;
+      this._lastTick = now;
+      const st = document.getElementById('d2-status');
+      if (!st) return;
+      st.textContent = this.statusLine();
+      const b = document.getElementById('d2-sim');
+      if (b) { const html = this.simLabel(); if (b.innerHTML !== html) b.innerHTML = html; }
+      if (plans.designer && !(plans.designer.drag && plans.designer.drag.moved)) plans.designer.render();
     },
     templatePicker() {
       return card(t('tpl.title'), `<p class="muted">${esc(t('tpl.lede'))}</p><div class="tpl-grid">${Airly.TEMPLATES.map((k) =>

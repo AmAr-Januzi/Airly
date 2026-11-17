@@ -1462,6 +1462,8 @@
     open,
     attach,
     closeInline,
+    /* start walking (used by the 2D plan's "Walk around" button) */
+    walk() { if (dlg && dlg.open) { startWalk(); canvas.focus(); } },
     /* test hook: what is under a canvas point */
     _pickAt: (x, y) => pickAt(x, y),
     _cam: () => Object.assign({}, cam),

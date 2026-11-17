@@ -214,7 +214,7 @@
       "toast.prefsReset": "Einstellungen zurückgesetzt.", "toast.cleared": "Alle Daten gelöscht.", "toast.saved": "„{name}“ gespeichert.", "toast.saveFailed": "Speichern nicht möglich — Browserspeicher nicht verfügbar oder voll.",
       "toast.loaded": "Zuhause geöffnet.", "toast.imported": "Zuhause importiert.", "toast.importFailed": "Diese Datei ist kein gültiges Airly-Zuhause.",
       "toast.lAdded": "L-förmiger Raum hinzugefügt. Beide Teile bewegen sich zusammen; die Größe ändern Sie jeweils am Eckgriff.", "toast.template": "Mit „{name}“ begonnen.",
-      "v3d.open": "3D-Ansicht öffnen", "v3d.back2d": "Zurück zum 2D-Plan", "v3d.title": "3D-Ansicht — {name}", "v3d.tools": "Steuerung der 3D-Ansicht",
+      "v3d.open": "3D-Ansicht öffnen", "v3d.back2d": "Zurück zum 2D-Plan", "v3d.title": "3D-Ansicht — {name}", "plan2d.title": "2D-Grundriss — {name}", "v3d.tools": "Steuerung der 3D-Ansicht",
       "v3d.aria": "3D-Modell des Zuhauses mit Raumtemperaturen und der Luft aus den Klimageräten", "v3d.wallsLow": "Wände kürzen", "v3d.wallsFull": "Volle Wände",
       "v3d.rotL": "Nach links drehen", "v3d.rotR": "Nach rechts drehen", "v3d.resetView": "Ansicht zurücksetzen",
       "v3d.hint": "Ziehen zum Drehen · Raum anklicken zum Betreten · Umschalt/rechte Maustaste zum Verschieben · Mausrad oder zwei Finger zum Zoomen · A/D drehen · W/S neigen",

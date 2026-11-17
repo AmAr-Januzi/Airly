@@ -214,7 +214,7 @@
       "toast.prefsReset": "Impostazioni reimpostate.", "toast.cleared": "Tutti i dati eliminati.", "toast.saved": "“{name}” salvata.", "toast.saveFailed": "Impossibile salvare — memoria del browser non disponibile o piena.",
       "toast.loaded": "Casa aperta.", "toast.imported": "Casa importata.", "toast.importFailed": "Questo file non è una casa Airly valida.",
       "toast.lAdded": "Stanza a L aggiunta. Le due parti si spostano insieme; ridimensiona ciascuna con la maniglia d'angolo.", "toast.template": "Iniziato da “{name}”.",
-      "v3d.open": "Apri la vista 3D", "v3d.back2d": "Torna alla pianta 2D", "v3d.title": "Vista 3D — {name}", "v3d.tools": "Comandi della vista 3D",
+      "v3d.open": "Apri la vista 3D", "v3d.back2d": "Torna alla pianta 2D", "v3d.title": "Vista 3D — {name}", "plan2d.title": "Pianta 2D — {name}", "v3d.tools": "Comandi della vista 3D",
       "v3d.aria": "Modello 3D della casa con le temperature delle stanze e l'aria che esce dai climatizzatori", "v3d.wallsLow": "Abbassa i muri", "v3d.wallsFull": "Muri interi",
       "v3d.rotL": "Ruota a sinistra", "v3d.rotR": "Ruota a destra", "v3d.resetView": "Reimposta vista",
       "v3d.hint": "Trascina per ruotare · clicca una stanza per entrare · Maiusc/tasto destro per spostare · rotella o due dita per lo zoom · A/D ruota · W/S inclina",

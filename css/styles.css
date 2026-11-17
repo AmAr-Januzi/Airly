@@ -300,7 +300,9 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 .ac-text { fill: var(--text); font-weight: 700; pointer-events: none; }
 /* designer: full-width plan with the tools panel built into its right side */
 /* fills the window below the top bar (no scrolling to see it); fixed, so the zoom never jumps when the side panel changes */
-.studio { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: minmax(0, 1fr); padding: 0; overflow: hidden; margin-bottom: 18px; height: calc(100vh - 107px); height: calc(100dvh - 107px); min-height: 360px; }
+.studio { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: auto minmax(0, 1fr); padding: 0; overflow: hidden; margin-bottom: 18px; height: calc(100vh - 107px); height: calc(100dvh - 107px); min-height: 360px; }
+.studio-head { grid-column: 1 / -1; }
+.studio-head h2 { margin: 0; }
 .studio-3d { display: block; min-height: 520px; }
 .view3d-dialog.inline { position: static; display: block; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
 .view3d-dialog.inline .v3d-tools [data-v3d="close"] { display: none; }
@@ -316,8 +318,6 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 .studio-panel:hover::-webkit-scrollbar-thumb, .v3d-side:hover::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--muted) 55%, transparent); }
 .studio-panel::-webkit-scrollbar-thumb:hover, .v3d-side::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .studio-panel, .v3d-side { scroll-behavior: auto; } }
-.studio-zoom { position: absolute; bottom: 12px; left: 12px; z-index: 3; display: flex; gap: 6px; }
-.studio-zoom .btn { box-shadow: var(--shadow); background: var(--surface); }
 .studio-panel { border-left: 1px solid var(--border); background: var(--surface); padding: 14px 16px 18px; overflow-y: auto; height: 100%; min-height: 0; }
 .studio-panel h2 { margin-bottom: 10px; }
 .studio-panel .field-row { gap: 0 8px; }
@@ -344,7 +344,7 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 .room-wall:hover { stroke: color-mix(in srgb, var(--brand) 35%, transparent); }
 .room-wall-mark { stroke: var(--brand); stroke-width: .22; stroke-linecap: round; pointer-events: none; }
 @media (max-width: 900px) {
-  .studio { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; height: auto; min-height: 0; }
+  .studio { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; height: auto; min-height: 0; }
   .studio-stage { height: 58vh; min-height: 300px; }
   .studio.studio-3d { height: 88vh; min-height: 520px; }
   .studio-panel { border-left: 0; border-top: 1px solid var(--border); height: auto; }

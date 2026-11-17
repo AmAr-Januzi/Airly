@@ -557,6 +557,7 @@
     'v3d.open': ['Open 3D view', 'Hap pamjen 3D'],
     'v3d.back2d': ['Back to the 2D plan', 'Kthehu te plani 2D'],
     'v3d.title': ['3D view — {name}', 'Pamja 3D — {name}'],
+    'plan2d.title': ['2D plan — {name}', 'Plani 2D — {name}'],
     'v3d.tools': ['3D view controls', 'Kontrollet e pamjes 3D'],
     'v3d.aria': ['3D model of the home showing room temperatures and air flowing from the AC units', 'Modeli 3D i shtëpisë me temperaturat e dhomave dhe ajrin që del nga kondicionerët'],
     'v3d.wallsLow': ['Cut walls', 'Ul muret'],

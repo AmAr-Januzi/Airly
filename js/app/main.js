@@ -64,7 +64,10 @@
     window.addEventListener('appinstalled', () => { ui.installPrompt = null; toast(t('pwa.installed'), 'good'); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) notifyDue(); });
     setTimeout(notifyDue, 1500);
-    store.on('sim', () => { if (ui.view === 'simulator') Airly.views.simulator.tick(); });
+    store.on('sim', () => {
+      if (ui.view === 'simulator') Airly.views.simulator.tick();
+      else if (ui.view === 'designer' && !ui.designer3d) Airly.views.designer.tick();
+    });
     store.on('plan-drag', () => {
       if (ui.view === 'designer') {
         const s = ui.sel;
