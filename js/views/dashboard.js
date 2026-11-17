@@ -8,7 +8,30 @@
     const due = Airly.dueReminders ? Airly.dueReminders() : [];
     if (!due.length) return '';
     return `<section class="card reminder" role="status"><span class="reminder-icon" aria-hidden="true">🔔</span><div><h2>${esc(t('remind.title'))}</h2><ul>${due.map((k) => `<li>${esc(t('remind.' + k))} ${k === 'filter' ? btn('filterCleaned', esc(t('remind.doneFilter')), 'small') : btn('serviceDone', esc(t('remind.doneService')), 'small')}</li>`).join('')}</ul>
-      <div class="row-gap">${btn('snoozeReminders', esc(t('remind.snooze')), 'ghost small')}${btn('go', esc(t('nav.maintenance')), 'ghost small', { view: 'maintenance' })}</div></div></section>`;
+      <div class="row-gap">${btn('snoozeReminders', esc(t('remind.snooze')), 'ghost small')}${btn('goTab', esc(t('nav.maintenance')), 'ghost small', { view: 'care', tab: 'maintenance' })}</div></div></section>`;
+  }
+  /* One card per part of the app, with what is in it right now and a button that opens it */
+  function sections(h, season, nRecs) {
+    const p = Airly.store.prefs;
+    const furn = (h.furniture || []).filter((f) => f.kind !== 'stairs').length;
+    const timers = h.acs.filter((a) => a.schedule && a.schedule.enabled).length;
+    let monthly = null;
+    try { monthly = Airly.advisor.energy(h, season, p.hours).dailyKWh * p.days * p.price; } catch (e) { /* no estimate */ }
+    const m = h.maintenance || {};
+    const days = m.lastFilterClean ? Math.floor((Date.now() - m.lastFilterClean) / 864e5) : null;
+    const due = Airly.dueReminders ? Airly.dueReminders().length : 0;
+    const items = [
+      { icon: '🏠', title: 'nav.designer', line: t('dash.secDesigner', { rooms: h.rooms.length, floors: h.levels || 1, furn }), act: btn('go', esc(t('dash.open')), 'small', { view: 'designer' }) },
+      { icon: '▶', title: 'nav.simulator', line: t('dash.secSim', { acs: h.acs.length, on: h.acs.filter((a) => a.on).length, timers }), act: btn('go', esc(t('dash.open')), 'small', { view: 'simulator' }) },
+      { icon: '🌿', title: 'nav.eco', line: (h.acs.length && monthly != null ? t('dash.secEco', { cost: F().money(monthly), season: t('season.' + season).toLowerCase() }) : t('acs.none')) + ' · ' + t('dash.secRecs', { n: nRecs }), act: btn('goTab', esc(t('dash.open')), 'small', { view: 'eco', tab: 'energy' }) },
+      { icon: '🛟', title: 'nav.groupHelp', line: due ? t('dash.secCareDue') : days != null ? t('dash.secCareDays', { d: days }) : t('dash.secCareNever'), warn: !!due, act: btn('goTab', esc(t('dash.open')), 'small', { view: 'care', tab: 'maintenance' }) },
+    ];
+    return `<section class="dash-sections" aria-label="${esc(t('dash.glance'))}">
+      <h2 class="dash-sec-title">${esc(t('dash.glance'))}</h2>
+      <div class="dash-sec-grid">${items.map((x) => `<article class="card dash-sec${x.warn ? ' is-warn' : ''}">
+        <span class="dash-sec-icon" aria-hidden="true">${x.icon}</span>
+        <div class="dash-sec-body"><h3>${esc(t(x.title))}</h3><p>${esc(x.line)}</p></div>
+        ${x.act}</article>`).join('')}</div></section>`;
   }
   function roomTable(an) {
     if (!an.rooms.length) return `<p class="muted">${esc(t('rooms.none'))}</p>`;
@@ -45,6 +68,7 @@
             <div class="hero-actions">
               ${btn('go', esc(t('dash.openDesigner')), 'primary', { view: 'designer' })}
               ${btn('go', esc(t('dash.runSim')), '', { view: 'simulator' })}
+              ${btn('goTab', '🌿 ' + esc(t('nav.eco')), '', { view: 'eco', tab: 'energy' })}
             </div>
           </div>
           <div class="hero-season">${seasonTabs(season, 'setSeason')}
@@ -52,7 +76,7 @@
           </div>
         </div>
         ${remindersCard()}
-        <div class="stats">
+        <div class="stats stats-6">
           ${stat('🏠', t('dash.rooms'), h.rooms.length, F().num(an.totals.area, 1) + ' m² · ' + F().num(an.totals.volume, 0) + ' m³')}
           ${stat('❄', t('dash.acUnits'), h.acs.length, t('dash.acOn', { n: h.acs.filter((a) => a.on).length }))}
           ${stat('🌡', t('dash.avgTemp'), F().temp(avg), avgNote)}
@@ -60,10 +84,11 @@
           ${stat('⚠', t('dash.problemRooms'), problemRooms, t('dash.problemNote'))}
           ${stat('😊', t('comfort.avg'), (an.rooms.length ? Math.round(an.rooms.reduce((s2, r) => s2 + r.comfort, 0) / an.rooms.length) : 0) + '/100', t('comfort.avgNote'))}
         </div>
+        ${sections(h, season, Airly.advisor.recommend(h, season).filter((r) => r.severity !== 'good').length)}
         <div class="grid-2">
           ${card(t('dash.layout'), `<div class="mini-wrap">${btn3d()}<div class="mini-plan" id="dash-plan"></div></div><div class="row-gap">${btn('go', esc(t('dash.editLayout')), 'ghost small', { view: 'designer' })}</div>`)}
           ${card(t('dash.topRecs'), recs.length ? `<ul class="rec-mini">${recs.map((r) => `<li>${badge(r.severity, t('sev.' + r.severity))} <span>${esc(t('rec.' + r.type + '.title', r.params))}</span></li>`).join('')}</ul>` : `<p>${badge('good', t('sev.good'))} ${esc(t('dash.noRecs'))}</p>`,
-            '', btn('go', esc(t('common.viewAll')), 'ghost small', { view: 'recommendations' }))}
+            '', btn('goTab', esc(t('common.viewAll')), 'ghost small', { view: 'eco', tab: 'recs' }))}
         </div>
         ${card(t('dash.rooms'), roomTable(an), 'table-card')}
         ${estimateNote()}`;

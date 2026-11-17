@@ -128,6 +128,8 @@
 
   const actions = {
     go: (d) => (location.hash = '#' + d.view),
+    /* open a page on one of its tabs (ECO, Help & Care) */
+    goTab: (d) => { if (Airly.views[d.view]) Airly.views[d.view].tab = d.tab; if (location.hash === '#' + d.view) render(); else location.hash = '#' + d.view; },
     setSeason: async (d) => {
       const h = store.state;
       if (h.env.season === d.season) return;

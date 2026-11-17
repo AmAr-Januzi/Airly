@@ -162,7 +162,7 @@ main { flex: 1; padding: 24px; outline: none; }
 .card.empty { padding: 28px; text-align: center; color: var(--muted); }
 .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .recs-layout { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 14px; }
 .stat { display: flex; gap: 12px; padding: 14px 16px; align-items: flex-start; }
 .stat-icon { font-size: 1.3rem; width: 40px; height: 40px; display: grid; place-items: center; background: var(--surface-2); border-radius: 10px; flex: none; }
 .stat-label { font-size: .8rem; color: var(--muted); }
@@ -777,3 +777,22 @@ dialog::backdrop { background: rgba(10, 10, 8, .45); }
 .theme-btn span { position: absolute; inset: 0; display: grid; place-items: center; transition: transform .35s cubic-bezier(.2, .8, .2, 1), opacity .25s; }
 [data-theme-resolved="dark"] .theme-btn .ti-moon, :root:not([data-theme-resolved="dark"]) .theme-btn .ti-sun { transform: translateY(120%) rotate(40deg); opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .theme-btn span, .day-chip { transition: none; } }
+
+/* dashboard: one card per part of the app */
+.dash-sec-title { font-size: 1rem; margin: 4px 2px 10px; }
+.dash-sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.dash-sec { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto; gap: 6px 12px; padding: 14px 16px; transition: border-color .2s, transform .2s cubic-bezier(.2, .8, .2, 1); }
+.dash-sec:hover { border-color: var(--brand); transform: translateY(-2px); }
+.dash-sec-icon { grid-row: 1 / span 2; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.25rem; background: var(--brand-soft); }
+.dash-sec h3 { margin: 0 0 2px; font-size: .98rem; }
+.dash-sec p { margin: 0; color: var(--text-2); font-size: .86rem; line-height: 1.4; }
+.dash-sec .btn { justify-self: start; }
+.dash-sec.is-warn { border-color: color-mix(in srgb, var(--warning) 55%, var(--border)); }
+.dash-sec.is-warn .dash-sec-icon { background: var(--warning-bg); }
+@media (prefers-reduced-motion: reduce) { .dash-sec { transition: none; } .dash-sec:hover { transform: none; } }
+
+/* dashboard: even rows at every width */
+.stats.stats-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.dash-sec-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1280px) { .stats.stats-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .dash-sec-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .stats.stats-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dash-sec-grid { grid-template-columns: minmax(0, 1fr); } }
