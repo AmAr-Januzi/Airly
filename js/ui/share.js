@@ -277,7 +277,7 @@
       return false;
     }
     const nm = data.name || t('home.defaultName');
-    if (!confirm(t('share.confirm', { name: nm }))) {
+    if (!(await Airly.confirmDialog({ icon: '🔗', title: t('confirm.shareTitle'), message: t('share.confirm', { name: nm }), ok: t('confirm.okOpen'), cancel: t('common.cancel') }))) {
       history.replaceState(null, '', baseURL() + '#dashboard');
       return false;
     }

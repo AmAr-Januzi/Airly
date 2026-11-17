@@ -86,14 +86,14 @@
         a.y = clamp(a.y, r.y + 0.2, r.y + r.width - 0.2);
       });
     },
-    deleteSelection() {
+    async deleteSelection() {
       const s = this.sel;
       if (!s || s.kind === 'roomwall') return toast(t('toast.selectFirst'));
       const h = store.state;
       if (s.kind === 'room') {
         const r = store.room(s.id);
         const n = h.acs.filter((a) => a.roomId === s.id).length;
-        if (!confirm(t(n ? 'confirm.deleteRoomAC' : 'confirm.deleteRoom', { room: Airly.roomName(r), n }))) return;
+        if (!(await Airly.confirmDialog({ icon: '🗑', danger: true, title: t(n ? 'confirm.deleteRoomAC' : 'confirm.deleteRoom', { room: Airly.roomName(r), n }), ok: t('confirm.okDelete'), cancel: t('common.cancel') }))) return;
         h.rooms = h.rooms.filter((x) => x.id !== s.id);
         h.acs = h.acs.filter((a) => a.roomId !== s.id);
       } else if (s.kind === 'ac') {

@@ -10,6 +10,12 @@
   const { toast, render } = Airly;
   const { applyTheme, DAY } = Airly.app;
 
+
+  /* the app's own confirm dialog (same as the Cooling / Heating question) */
+  const ICON = { del: '🗑', reset: '↺', open: '📂', add: '＋', save: '💾' };
+  const ask = (o) => Airly.confirmDialog(o);
+  const askDelete = (title, message) => ask({ icon: ICON.del, danger: true, title, message, ok: t('confirm.okDelete'), cancel: t('common.cancel') });
+
   /* ---------- Actions ---------- */
   const ROOM_DIMS = { living: [5, 4], bedroom: [4, 3.5], kitchen: [3.5, 3], bathroom: [2.5, 2], hallway: [4, 1.4], office: [3, 3], dining: [4, 3.5], custom: [4, 4] };
   function targetRoom() {
@@ -220,8 +226,8 @@
       store.state.acs.push(c);
       store.commit('add'); render();
     },
-    removeAC: (d) => {
-      if (!confirm(t('confirm.removeAC'))) return;
+    removeAC: async (d) => {
+      if (!(await askDelete(t('confirm.removeAC')))) return;
       store.state.acs = store.state.acs.filter((a) => a.id !== d.id);
       store.commit('delete'); render();
     },
@@ -458,12 +464,12 @@
       store.commit('struct'); render();
       toast(t('level.added', { name: Airly.levelName(ui.level) }));
     },
-    removeLevel: () => {
+    removeLevel: async () => {
       const h = store.state;
       const k = ui.level;
       if ((h.levels || 1) <= 1) return;
       const n = h.rooms.filter((r) => (r.level || 0) === k).length;
-      if (!confirm(t(n ? 'level.confirmRemoveRooms' : 'level.confirmRemove', { name: Airly.levelName(k), n }))) return;
+      if (!(await askDelete(t(n ? 'level.confirmRemoveRooms' : 'level.confirmRemove', { name: Airly.levelName(k), n })))) return;
       const gone = new Set(h.rooms.filter((r) => (r.level || 0) === k).map((r) => r.id));
       h.rooms = h.rooms.filter((r) => !gone.has(r.id));
       h.acs = h.acs.filter((a) => !gone.has(a.roomId));
@@ -491,9 +497,9 @@
       store.commit('add'); render();
       toast(t('toast.lAdded'));
     },
-    newTemplate: (d) => {
+    newTemplate: async (d) => {
       const kind = d.tpl || (document.getElementById('tpl-sel') || {}).value;
-      if (store.state.rooms.length && !confirm(t('confirm.newProject'))) return;
+      if (store.state.rooms.length && !(await ask({ icon: ICON.add, title: t('confirm.newTitle'), message: t('confirm.newProject'), ok: t('confirm.okNew') }))) return;
       store.newFromTemplate(kind); ui.sel = null; ui.level = 0; TH.live.reset(store.state);
       const dlg = document.getElementById('modal'); if (dlg.open) dlg.close();
       location.hash = '#designer'; render();
@@ -591,8 +597,8 @@
       Airly.view3d.open();
     },
     locateAC: (d) => { ui.sel = { kind: 'ac', id: d.id }; location.hash = '#designer'; },
-    deleteSel: () => { ui.deleteSelection(); render(); },
-    deleteRoom: (d) => { ui.sel = { kind: 'room', id: d.id }; ui.deleteSelection(); render(); },
+    deleteSel: async () => { await ui.deleteSelection(); render(); },
+    deleteRoom: async (d) => { ui.sel = { kind: 'room', id: d.id }; await ui.deleteSelection(); render(); },
     editRoom: (d) => { ui.roomId = d.id; location.hash = '#rooms'; },
     editAC: (d) => { ui.acId = d.id; ui.scrollToAC = true; location.hash = '#acs'; },
     pickRoom: (d) => { ui.roomId = d.id; ui.sel = { kind: 'room', id: d.id }; render({ action: 'pickRoom', id: null }); const b = document.querySelector(`.room-tab[data-id="${d.id}"]`); if (b) b.focus(); },
@@ -606,8 +612,8 @@
     zoomIn: (d) => Airly.plans[d.plan] && Airly.plans[d.plan].zoom(1 / 1.25),
     zoomOut: (d) => Airly.plans[d.plan] && Airly.plans[d.plan].zoom(1.25),
     zoomFit: (d) => Airly.plans[d.plan] && Airly.plans[d.plan].fit(),
-    resetLayout: () => {
-      if (!confirm(t('confirm.resetLayout'))) return;
+    resetLayout: async () => {
+      if (!(await ask({ icon: ICON.reset, danger: true, title: t('confirm.resetTitle'), message: t('confirm.resetLayout'), ok: t('confirm.okReset') }))) return;
       store.resetHome(); ui.sel = null;
       Airly.plans.designer && Airly.plans.designer.fit();
       render(); toast(t('toast.reset'));
@@ -650,10 +656,10 @@
       if (out) out.scrollIntoView({ behavior: 'smooth', block: 'start' });
       toast(t('toast.proposal'), 'good');
     },
-    loadScenario: (d) => {
+    loadScenario: async (d) => {
       const h = store.state;
       const s = h.scenarios.find((x) => x.id === d.id);
-      if (!s || !confirm(t('confirm.loadScenario', { name: s.name }))) return;
+      if (!s || !(await ask({ icon: ICON.open, title: t('confirm.loadScenTitle'), message: t('confirm.loadScenario', { name: s.name }), ok: t('confirm.okLoad') }))) return;
       Object.assign(h, Airly.clone(s.data));
       ui.sel = null;
       TH.live.reset(h);
@@ -671,16 +677,16 @@
     guideTab: (d) => { Airly.views.guide.tab = d.tab; render(); const b = document.getElementById('gtab-' + d.tab); if (b) b.focus(); },
     filterCleaned: () => { store.state.maintenance.lastFilterClean = Date.now(); store.commit('struct'); render(); toast(t('toast.filter'), 'good'); },
     clearChecks: () => { store.state.maintenance.checks = {}; store.commit('struct'); render(); },
-    resetPrefs: () => {
-      if (!confirm(t('confirm.resetPrefs'))) return;
+    resetPrefs: async () => {
+      if (!(await ask({ icon: ICON.reset, title: t('confirm.resetPrefs'), ok: t('confirm.okReset') }))) return;
       store.resetPrefs(); Airly.i18n.setLang(store.prefs.lang); applyTheme(); render(); toast(t('toast.prefsReset'));
     },
-    resetHome: () => {
-      if (!confirm(t('confirm.resetHome'))) return;
+    resetHome: async () => {
+      if (!(await ask({ icon: ICON.reset, danger: true, title: t('confirm.resetTitle'), message: t('confirm.resetHome'), ok: t('confirm.okReset') }))) return;
       store.resetHome(); ui.sel = null; render(); toast(t('toast.reset'));
     },
-    clearAll: () => {
-      if (!confirm(t('confirm.clearAll'))) return;
+    clearAll: async () => {
+      if (!(await askDelete(t('confirm.clearTitle'), t('confirm.clearAll')))) return;
       store.clearAll(); Airly.i18n.setLang(store.prefs.lang); applyTheme(); ui.sel = null; render(); toast(t('toast.cleared'));
     },
     exportJSON: () => {
@@ -691,28 +697,41 @@
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     },
-    saveHome: () => {
+    saveHome: async () => {
+      const name = store.state.name || t('home.defaultName');
+      const exists = !!store.projects()[store.state.id];
+      if (!(await ask({ icon: ICON.save, title: t('confirm.saveTitle', { name }), message: t(exists ? 'confirm.saveUpdate' : 'confirm.saveNew'), ok: t('confirm.okSave') }))) return;
       if (store.saveProject()) toast(t('toast.saved', { name: store.state.name || t('home.defaultName') }), 'good');
       else toast(t('toast.saveFailed'), 'bad');
       if (document.getElementById('modal').open) openProjects();
     },
     openProjects: () => openProjects(),
     closeModal: () => document.getElementById('modal').close(),
-    loadProject: (d) => {
-      if (!confirm(t('confirm.loadProject'))) return;
+    loadProject: async (d) => {
+      if (!(await ask({ icon: ICON.open, title: t('confirm.openTitle'), message: t('confirm.loadProject'), ok: t('confirm.okOpen') }))) return;
       store.flush();
       store.loadProject(d.id); ui.sel = null; TH.live.reset(store.state);
       document.getElementById('modal').close(); render(); toast(t('toast.loaded'), 'good');
     },
-    deleteProject: (d) => { if (!confirm(t('confirm.deleteProject'))) return; store.deleteProject(d.id); openProjects(); },
-    newProject: (d) => {
-      if (!confirm(t('confirm.newProject'))) return;
+    deleteProject: async (d) => {
+      const pr = store.projects()[d.id];
+      if (!(await askDelete(t('confirm.deleteProject'), pr ? '“' + (pr.name || t('home.defaultName')) + '”' : ''))) return;
+      store.deleteProject(d.id); openProjects(); toast(t('toast.deleted'));
+    },
+    newProject: async (d) => {
+      if (!(await ask({ icon: ICON.add, title: t('confirm.newTitle'), message: t('confirm.newProject'), ok: t('confirm.okNew') }))) return;
       store.newProject(d.sample === '1'); ui.sel = null; TH.live.reset(store.state);
       document.getElementById('modal').close(); location.hash = '#designer'; render();
     },
     unit: (d) => { store.prefs.tempUnit = d.unit === 'F' ? 'F' : 'C'; store.savePrefs(); render(); },
     lang: (d) => { store.prefs.lang = d.lang; store.savePrefs(); Airly.i18n.setLang(d.lang); render(); },
     menu: () => {
+      if (!window.matchMedia('(max-width: 960px)').matches) {
+        store.prefs.sideCollapsed = !store.prefs.sideCollapsed;
+        store.savePrefs();
+        Airly.app.applySidebar(true);
+        return;
+      }
       const open = !document.body.classList.contains('nav-open');
       document.body.classList.toggle('nav-open', open);
       document.getElementById('menu-btn').setAttribute('aria-expanded', String(open));

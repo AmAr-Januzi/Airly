@@ -109,6 +109,7 @@
     }
     document.querySelectorAll('.unit-btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.unit === (store.prefs.tempUnit || 'C'))));
     updateAvatar();
+    applySidebar(false);
     const tb = document.getElementById('theme-btn');
     if (tb) { const dark = document.documentElement.dataset.themeResolved === 'dark'; const l = t(dark ? 'theme.toLight' : 'theme.toDark'); tb.setAttribute('aria-label', l); tb.title = l; }
     const nm = document.getElementById('top-home-name');
@@ -129,6 +130,8 @@
       sb.classList.add('has-pill');
       const nav = sb.querySelector('nav');
       if (nav) nav.addEventListener('scroll', () => movePill(), { passive: true });
+      // after the sidebar folds or unfolds, put the highlight exactly on the active link
+      sb.addEventListener('transitionend', (ev) => { if (ev.target === sb) movePill(); });
       window.addEventListener('resize', () => movePill());
     }
     const a = sb.querySelector('.nav-link.active');
@@ -149,6 +152,29 @@
     else { img.hidden = true; img.removeAttribute('src'); ph.style.display = ''; }
   }
   Airly.updateAvatar = updateAvatar;
+  const mqSmall = window.matchMedia ? window.matchMedia('(max-width: 960px)') : null;
+  if (mqSmall && mqSmall.addEventListener) mqSmall.addEventListener('change', () => applySidebar(false));
+  /* folded sidebar (icons only) on a computer; animate: keep the highlight on the active icon while it folds */
+  function applySidebar(animate) {
+    const small = window.matchMedia('(max-width: 960px)').matches;
+    const folded = !small && !!store.prefs.sideCollapsed;
+    document.body.classList.toggle('side-collapsed', folded);
+    const btn = document.getElementById('menu-btn');
+    if (btn && small) { btn.setAttribute('aria-label', t('top.menu')); btn.removeAttribute('title'); }
+    if (btn && !small) {
+      const l = t(folded ? 'side.expand' : 'side.collapse');
+      btn.setAttribute('aria-expanded', String(!folded));
+      btn.setAttribute('aria-label', l);
+      btn.title = l;
+    }
+    // with only icons showing, each link says its name on hover
+    document.querySelectorAll('#sidebar .nav-link').forEach((a) => { const n = a.querySelector('span:not(.ni)'); if (folded && n) a.title = n.textContent.trim(); else a.removeAttribute('title'); });
+    if (animate) {
+      const end = performance.now() + 420;
+      const follow = () => { movePill(); if (performance.now() < end) requestAnimationFrame(follow); else window.dispatchEvent(new Event('resize')); };
+      requestAnimationFrame(follow);
+    } else movePill();
+  }
 
   /* ---------- Routing ---------- */
   function show(view) {
@@ -199,5 +225,5 @@
   }
   Airly.render = render;
 
-  Airly.app = { VIEWS, DAY, show, applyTheme, applyStatic, notifyDue, movePill };
+  Airly.app = { VIEWS, DAY, show, applyTheme, applyStatic, notifyDue, movePill, applySidebar };
 })();

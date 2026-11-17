@@ -91,6 +91,8 @@
       show('dashboard');
       Airly.share.importFromHash().then((ok) => { if (ok) render(); });
     } else show(location.hash.slice(1) || 'dashboard');
+    // the page is laid out: from now on the sidebar may animate
+    requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('no-anim')));
     if (!Airly.storageOK) toast(t('settings.storageNo'), 'bad');
   }
 
