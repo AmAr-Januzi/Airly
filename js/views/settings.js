@@ -12,7 +12,6 @@
         <div class="grid-2">
           ${card(t('settings.general'), `
             ${field(t('settings.language'), sel('pref.lang', Airly.i18n.languages().map((l) => ({ v: l.code, l: l.name })), p.lang))}
-            ${field(t('settings.theme'), sel('pref.theme', opts(['auto', 'light', 'dark'], 'theme.'), p.theme))}
             ${field(t('settings.tempUnit'), sel('pref.tempUnit', opts(['C', 'F'], 'tempUnit.'), p.tempUnit))}
             ${field(t('settings.units'), `<input type="text" value="${esc(t('settings.unitsValue'))}" disabled>`, { hint: t('settings.unitsHint') })}
             ${field(t('settings.currency'), sel('pref.currency', ['€', '$', '£', 'L', 'CHF'], p.currency))}
