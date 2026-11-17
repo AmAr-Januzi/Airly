@@ -84,10 +84,11 @@
     return o;
   }
   const wallPick = (id) => { const el = document.getElementById(id); if (el) ui.opWall = el.value; return el ? el.value : 'auto'; };
-  function addAC(r, btu) {
+  function addAC(r, btu, pos) {
     const h = store.state;
     const req = TH.required(r, h.env.season === 'heating' ? 'heat' : 'cool', h.env);
-    const a = Airly.factory.defaultAC(r.id, r.x + r.length / 2, r.y + 0.25, btu || req.size);
+    const a = Airly.factory.defaultAC(r.id, pos ? pos.x : r.x + r.length / 2, pos ? pos.y : r.y + 0.25, btu || req.size);
+    if (pos && pos.orient) a.orient = pos.orient;
     a.mode = h.env.season === 'heating' ? 'heat' : 'cool';
     a.target = h.env.season === 'heating' ? 21 : 22;
     a.model = 'Split ' + Math.round(a.btu / 1000) + 'K';
@@ -223,6 +224,54 @@
       store.commit('add'); render();
       toast(t('toast.furnAdded', { item: t('furn.' + kind) }));
     },
+    /* ---- designer side panel ---- */
+    studioFurn: (d) => {
+      const h = store.state;
+      const lv = ui.level || 0;
+      const s = ui.sel;
+      const p = Airly.plans.designer;
+      const cx = p ? p.vb.x + p.vb.w / 2 : 0, cy = p ? p.vb.y + p.vb.h / 2 : 0;
+      // the room you are working in, else the room in the middle of the view, else the first room on this floor
+      let r = s && (s.kind === 'room' ? store.room(s.id) : (s.kind === 'roomwall' || s.kind === 'opening') ? store.room(s.roomId) : null);
+      if (!r) r = store.roomAt(cx, cy, null, lv) || h.rooms.find((x) => (x.level || 0) === lv);
+      const f = Airly.factory.defaultFurniture(d.kind, 0, 0, lv);
+      const mx = r ? r.x + r.length / 2 : cx, my = r ? r.y + r.width / 2 : cy;
+      f.x = Math.round((mx - f.w / 2) * 10) / 10; f.y = Math.round((my - f.d / 2) * 10) / 10;
+      h.furniture = h.furniture || [];
+      h.furniture.push(f);
+      ui.sel = { kind: 'furn', id: f.id };
+      store.commit('add'); render();
+      toast(t('toast.furnAdded', { item: t('furn.' + d.kind) }));
+    },
+    studioOpening: (d) => {
+      const s = ui.sel;
+      if (!s || s.kind !== 'roomwall') {
+        ui.wallPrompt = true;
+        toast(t('studio.clickWall'), 'bad');
+        const v = Airly.views.designer;
+        if (v && ui.view === 'designer') v.inspector();
+        return;
+      }
+      const r = store.room(s.roomId);
+      if (!r) return;
+      ui.wallPrompt = false;
+      if (d.type === 'ac') {
+        const mid = TH.wallLength(r, s.wall) / 2;
+        addAC(r, null, {
+          x: s.wall === 'left' ? r.x + 0.25 : s.wall === 'right' ? r.x + r.length - 0.25 : r.x + mid,
+          y: s.wall === 'top' ? r.y + 0.25 : s.wall === 'bottom' ? r.y + r.width - 0.25 : r.y + mid,
+          orient: s.wall === 'left' || s.wall === 'right' ? 'v' : 'h',
+        });
+        render();
+        return;
+      }
+      const L = TH.wallLength(r, s.wall);
+      const o = addOpening(r, d.type, s.wall);
+      if (o.w > L) o.w = L;
+      ui.sel = { kind: 'opening', id: o.id, roomId: r.id, type: d.type };
+      store.commit('add'); render();
+    },
+    studioBack: () => { ui.sel = null; render(); },
     rotateFurn: (d) => ui.rotateFurn(d.id),
     bestSpots: (d) => { ui.bestSpotsFor = ui.bestSpotsFor === d.id ? null : d.id; render(); },
     moveACBest: (d) => {

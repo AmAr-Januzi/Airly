@@ -23,7 +23,7 @@
       this.sel = next;
       if (kind === 'room') this.roomId = id;
       if (kind === 'ac') this.acId = id;
-      if (kind === 'opening' && extra) this.roomId = extra.roomId;
+      if ((kind === 'opening' || kind === 'roomwall') && extra) this.roomId = extra.roomId;
       const v = Airly.views[this.view];
       if (v && v.onSelect) v.onSelect();
     },
@@ -78,7 +78,7 @@
     },
     deleteSelection() {
       const s = this.sel;
-      if (!s) return toast(t('toast.selectFirst'));
+      if (!s || s.kind === 'roomwall') return toast(t('toast.selectFirst'));
       const h = store.state;
       if (s.kind === 'room') {
         const r = store.room(s.id);

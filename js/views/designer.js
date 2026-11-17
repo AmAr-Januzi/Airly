@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const Airly = window.Airly;
-  const { t, S, P, TH, esc, F, field, num, tnum, text, sel, check, toggle, opts, btn, card, head, roomOptions, views, plans, mountPlan, wallSelect, levelTabs, orientControl, btn3d, capOptions, updateCalc } = Airly.kit;
+  const { t, S, P, TH, esc, F, field, num, tnum, text, sel, check, toggle, opts, btn, card, head, roomOptions, views, plans, mountPlan, levelTabs, orientControl, capOptions, updateCalc } = Airly.kit;
 
   function bestSpotInfo(a) {
     const r = Airly.store.room(a.roomId);
@@ -25,50 +25,82 @@
       <li><span class="lg lg-cov" aria-hidden="true"></span>${esc(t('legend.coverage'))}</li></ul>`;
   }
 
+  const FURN_ICON = { sofa: '🛋', bed: '🛏', singleBed: '🛏', armchair: '💺', table: '🍽', desk: '🖥', wardrobe: '🗄', shelf: '📚', kitchen: '🍳', fridge: '🧊', tv: '📺', stairs: '🪜' };
+
+  /* Side panel when nothing (or a room wall) is selected: everything you can add */
+  function buildPanel() {
+    const p = P();
+    const s = Airly.ui.sel;
+    const wallSel = s && s.kind === 'roomwall' ? s : null;
+    const wr = wallSel && Airly.store.room(wallSel.roomId);
+    let wallInfo;
+    if (wr) {
+      wallInfo = `<p class="wall-status is-set"><span aria-hidden="true">▮</span> ${esc(t('studio.onWall', { room: Airly.roomName(wr), wall: t('wall.' + wallSel.wall) }))}<br><span class="muted small">${esc(t('studio.wallLen', { len: F().num(TH.wallLength(wr, wallSel.wall), 1) }))}</span></p>`;
+    } else {
+      const warn = Airly.ui.wallPrompt;
+      wallInfo = `<p class="wall-status${warn ? ' is-warn' : ''}" role="${warn ? 'alert' : 'note'}"><span aria-hidden="true">${warn ? '⚠' : '👆'}</span> ${esc(t(warn ? 'studio.clickWall' : 'studio.clickWallHint'))}</p>`;
+    }
+    const opBtn = (type, icon, key) => `<button type="button" class="tile${wr ? '' : ' is-idle'}" data-action="studioOpening" data-type="${type}"><span class="tile-icon" aria-hidden="true">${icon}</span><span>${esc(t(key))}</span></button>`;
+    return `<h2>${esc(t('studio.build'))}</h2>
+      <section class="studio-sec"><h3>${esc(t('studio.rooms'))}</h3>
+        ${levelTabs(true)}
+        <div class="add-room-row">
+          <label class="sr-only" for="new-room-type">${esc(t('room.type'))}</label>
+          <select id="new-room-type">${Airly.ROOM_TYPES.map((r) => `<option value="${r}">${esc(t('roomType.' + r))}</option>`).join('')}</select>
+          ${btn('addRoom', `<span aria-hidden="true">＋</span> ${esc(t('designer.addRoom'))}`, 'primary')}
+        </div>
+        ${btn('addLRoom', `<span aria-hidden="true">⌐</span> ${esc(t('designer.addL'))}`, 'small')}
+      </section>
+      <section class="studio-sec"><h3>${esc(t('studio.furniture'))}</h3>
+        <div class="tile-grid">${Object.keys(Airly.FURNITURE).map((k) => `<button type="button" class="tile" data-action="studioFurn" data-kind="${k}"><span class="tile-icon" aria-hidden="true">${FURN_ICON[k] || '▭'}</span><span>${esc(t('furn.' + k))}</span></button>`).join('')}</div>
+      </section>
+      <section class="studio-sec"><h3>${esc(t('studio.openings'))}</h3>
+        ${wallInfo}
+        <div class="tile-grid">
+          ${opBtn('door', '🚪', 'designer.addDoor')}
+          ${opBtn('window', '🪟', 'designer.addWindow')}
+          ${opBtn('ac', '❄', 'designer.addAC')}
+          <button type="button" class="tile" data-action="addWall"><span class="tile-icon" aria-hidden="true">▬</span><span>${esc(t('designer.addWall'))}</span></button>
+        </div>
+      </section>
+      <section class="studio-sec"><h3>${esc(t('studio.view'))}</h3>
+        ${toggle('pref.snap', p.snap, t('plan.snap'))}
+        ${toggle('pref.showCoverage', p.showCoverage, t('plan.coverage'))}
+        <div class="row-gap">${btn('resetLayout', esc(t('designer.resetLayout')), 'danger-ghost small')}</div>
+      </section>
+      <details class="studio-sec"><summary>${esc(t('legend.title'))}</summary>${legendPlan().replace(/<h3>.*?<\/h3>/, '')}</details>
+      <p class="muted small">${esc(t('designer.help'))}</p>`;
+  }
+  function openingsOfRoom(r) {
+    const items = r.doors.map((o) => ({ o, type: 'door' })).concat(r.windows.map((o) => ({ o, type: 'window' })));
+    const list = items.length ? `<ul class="op-mini">${items.map(({ o, type }) =>
+      `<li><span aria-hidden="true">${type === 'door' ? '🚪' : '🪟'}</span> ${esc(t(type === 'door' ? 'plan.door' : 'plan.window'))} · ${esc(t('wall.' + o.wall))} ${sel(`op.${r.id}.${type === 'door' ? 'doors' : 'windows'}.${o.id}.wall`, opts(Airly.WALLS, 'wall.'), o.wall).replace('<select', `<select aria-label="${esc(t('op.wall'))}"`)}</li>`).join('')}</ul>`
+      : `<p class="muted small">${esc(t('studio.noOpenings'))}</p>`;
+    return `<section class="studio-sec"><h3>${esc(t('studio.openingsInRoom'))}</h3>${list}
+      <div class="row-gap">${btn('addOpening', '🚪 ' + esc(t('designer.addDoor')), 'small', { room: r.id, type: 'doors' })}${btn('addOpening', '🪟 ' + esc(t('designer.addWindow')), 'small', { room: r.id, type: 'windows' })}</div>
+      <p class="hint small">${esc(t('studio.dragHint'))}</p></section>`;
+  }
+
   views.designer = {
     render(el) {
-      const p = P();
       el.innerHTML = head('nav.designer', 'designer.lede') + `
-        <div class="toolbar card" role="toolbar" aria-label="${esc(t('designer.tools'))}">
-          <div class="tool-group">
-            <label class="sr-only" for="new-room-type">${esc(t('room.type'))}</label>
-            <select id="new-room-type">${Airly.ROOM_TYPES.map((r) => `<option value="${r}">${esc(t('roomType.' + r))}</option>`).join('')}</select>
-            ${btn('addRoom', `<span aria-hidden="true">＋</span> ${esc(t('designer.addRoom'))}`, 'primary')}
-            ${btn('addLRoom', `<span aria-hidden="true">⌐</span> ${esc(t('designer.addL'))}`)}
+        <section class="studio card" aria-label="${esc(t('designer.tools'))}">
+          <div class="studio-stage">
+            <div class="studio-mode segmented" role="group" aria-label="2D / 3D">
+              <button type="button" class="seg active" aria-pressed="true">2D</button>
+              <button type="button" class="seg" data-action="open3d" aria-pressed="false" title="${esc(t('v3d.open'))}">${Airly.kit.CUBE} 3D</button>
+            </div>
+            <div class="studio-zoom">
+              ${btn('zoomOut', '−', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}
+              ${btn('zoomIn', '+', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomIn'))}"`)}
+              ${btn('zoomFit', esc(t('plan.fit')), '', { plan: 'designer' })}
+            </div>
+            <div id="designer-plan" class="plan-area"></div>
           </div>
-          ${levelTabs(true)}
-          <div class="tool-group">
-            <label for="new-op-wall">${esc(t('op.onWall'))}</label>
-            ${wallSelect('new-op-wall')}
-            ${btn('addDoor', `<span aria-hidden="true">🚪</span> ${esc(t('designer.addDoor'))}`)}
-            ${btn('addWindow', `<span aria-hidden="true">🪟</span> ${esc(t('designer.addWindow'))}`)}
-            ${btn('addWall', `<span aria-hidden="true">▬</span> ${esc(t('designer.addWall'))}`)}
-          </div>
-          <div class="tool-group">
-            <label class="sr-only" for="new-furn">${esc(t('furn.type'))}</label>
-            <select id="new-furn">${Object.keys(Airly.FURNITURE).map((k) => `<option value="${k}">${esc(t('furn.' + k))}</option>`).join('')}</select>
-            ${btn('addFurniture', `<span aria-hidden="true">🛋</span> ${esc(t('furn.add'))}`)}
-            ${btn('addACHere', `<span aria-hidden="true">❄</span> ${esc(t('designer.addAC'))}`)}
-            ${btn('deleteSel', `<span aria-hidden="true">🗑</span> ${esc(t('common.delete'))}`, 'danger-ghost')}
-          </div>
-          <div class="tool-group">
-            ${btn('zoomOut', '−', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}
-            ${btn('zoomIn', '+', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomIn'))}"`)}
-            ${btn('zoomFit', esc(t('plan.fit')), '', { plan: 'designer' })}
-          </div>
-          <div class="tool-group">
-            ${toggle('pref.snap', p.snap, t('plan.snap'))}
-            ${toggle('pref.showCoverage', p.showCoverage, t('plan.coverage'))}
-            ${btn('resetLayout', esc(t('designer.resetLayout')), 'danger-ghost')}
-          </div>
-        </div>
+          <aside class="studio-panel" id="inspector" aria-live="polite" aria-label="${esc(t('insp.title'))}"></aside>
+        </section>
         ${S().rooms.length ? '' : this.templatePicker()}
-        ${this.traceCard()}
-        <div class="designer-body">
-          <div class="plan-wrap card">${btn3d()}<div id="designer-plan" class="plan-area"></div>
-            <p class="plan-help muted small">${esc(t('designer.help'))}</p></div>
-          <aside class="inspector card" id="inspector" aria-live="polite" aria-label="${esc(t('insp.title'))}"></aside>
-        </div>`;
+        ${this.traceCard()}`;
       mountPlan('designer', el.querySelector('#designer-plan'), 'design');
       this.inspector();
     },
@@ -104,8 +136,10 @@
       if (!box) return;
       const s = Airly.ui.sel;
       let html = '';
-      if (!s) {
-        html = `<h2>${esc(t('insp.title'))}</h2><p class="muted">${esc(t('insp.empty'))}</p>` + legendPlan();
+      if (!s || s.kind === 'roomwall') {
+        if (s && s.kind === 'roomwall') Airly.ui.wallPrompt = false;
+        box.innerHTML = buildPanel();
+        return;
       } else if (s.kind === 'room') {
         const r = Airly.store.room(s.id);
         if (!r) return (box.innerHTML = '');
@@ -124,7 +158,8 @@
           <dl class="kv"><dt>${esc(t('room.area'))}</dt><dd data-calc="area-${r.id}">${F().num(g.area, 2)} m²</dd>
           <dt>${esc(t('room.volume'))}</dt><dd data-calc="vol-${r.id}">${F().num(g.volume, 2)} m³</dd></dl>
           ${check(`room.${r.id}.openPlan`, r.openPlan, t('room.openPlan'))}
-          <div class="row-gap">${btn('editRoom', esc(t('insp.moreDetails')), 'primary small', { id: r.id })} ${btn('deleteSel', esc(t('common.delete')), 'danger-ghost small')}</div>`;
+          <div class="row-gap">${btn('editRoom', esc(t('insp.moreDetails')), 'primary small', { id: r.id })} ${btn('deleteSel', esc(t('common.delete')), 'danger-ghost small')}</div>
+          ${openingsOfRoom(r)}`;
       } else if (s.kind === 'opening') {
         const r = Airly.store.room(s.roomId);
         const list = r ? (s.type === 'door' ? r.doors : r.windows) : [];
@@ -162,7 +197,7 @@
       } else if (s.kind === 'wall') {
         html = `<h2>${esc(t('plan.wall'))}</h2><p class="muted">${esc(t('insp.wallHelp'))}</p>${btn('deleteSel', esc(t('common.delete')), 'danger-ghost small')}`;
       }
-      box.innerHTML = html;
+      box.innerHTML = btn('studioBack', '← ' + esc(t('studio.back')), 'ghost small studio-back') + html;
     },
     onFormChange(el) {
       updateCalc();

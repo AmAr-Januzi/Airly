@@ -136,6 +136,7 @@
       this.clips.innerHTML = rooms.map((r) => `<clipPath id="clip-${this.mode}-${r.id}"><rect x="${r.x}" y="${r.y}" width="${r.length}" height="${r.width}"/></clipPath>`).join('');
       let out = '';
       let roomLabels = ''; // drawn after the furniture so names and temperatures stay readable
+      let wallMark = ''; // highlight of the selected room wall, drawn on top
       // background image for tracing a floor plan
       const tr = h.trace;
       if (tr && tr.src && (tr.level || 0) === lvl && this.mode === 'design') {
@@ -182,6 +183,15 @@
         } else {
           roomLabels += `<text class="room-name" x="${cx}" y="${cy - fs * 0.2}" font-size="${fs}">${esc(name)}</text>
             <text class="room-dims" x="${cx}" y="${cy + fs * 1.0}" font-size="${fs * 0.75}">${esc(dims)}</text>`;
+        }
+        if (design) {
+          // each room wall is clickable: pick a wall, then add a door or window to it
+          Airly.WALLS.forEach((w) => {
+            const s = this.wallSeg(r, w);
+            const on = sel.kind === 'roomwall' && sel.roomId === r.id && sel.wall === w;
+            out += `<line class="room-wall" data-kind="roomwall" data-id="${r.id}" data-wall="${w}" x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}"><title>${esc(t('studio.wallSel') + ' — ' + t('wall.' + w))}</title></line>`;
+            if (on) wallMark += `<line class="room-wall-mark" x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}"/>`;
+          });
         }
         if (design && isSel) {
           out += `<rect class="handle" data-kind="resize" data-id="${r.id}" x="${r.x + r.length - 0.22}" y="${r.y + r.width - 0.22}" width="0.44" height="0.44" rx="0.08"><title>${esc(t('plan.resize'))}</title></rect>`;
@@ -246,6 +256,7 @@
         r.windows.forEach((o) => (out += this.openingSVG(r, o, 'window', sel)));
         r.doors.forEach((o) => (out += this.openingSVG(r, o, 'door', sel)));
       });
+      out += wallMark;
       // free walls
       h.walls.filter((w) => (w.level || 0) === lvl).forEach((w) => {
         const isSel = sel.kind === 'wall' && sel.id === w.id;
@@ -290,6 +301,10 @@
       }
     }
 
+    wallSeg(r, w) {
+      const x0 = r.x, y0 = r.y, x1 = r.x + r.length, y1 = r.y + r.width;
+      return { top: { x1: x0, y1: y0, x2: x1, y2: y0 }, bottom: { x1: x0, y1: y1, x2: x1, y2: y1 }, left: { x1: x0, y1: y0, x2: x0, y2: y1 }, right: { x1: x1, y1: y0, x2: x1, y2: y1 } }[w];
+    }
     openingGeom(r, o) {
       const s = o.offset, e = o.offset + o.w;
       switch (o.wall) {
@@ -338,7 +353,8 @@
       svg.addEventListener('keydown', (ev) => this.onKey(ev));
       svg.addEventListener('focusin', (ev) => {
         const tgt = ev.target.closest && ev.target.closest('[data-kind]');
-        if (tgt && !this.drag) this.selectFromEl(tgt, true);
+        // keyboard focus selects; ignore focus moves caused by a click (the click already selected something)
+        if (tgt && !this.drag && !this.pointers.size) this.selectFromEl(tgt, true);
       });
     }
     selectFromEl(el, quiet) {
@@ -347,6 +363,7 @@
       if (kind === 'resize') return Airly.ui.select('room', id, quiet);
       if (kind === 'wall-end') return Airly.ui.select('wall', id, quiet);
       if (kind === 'opening') return Airly.ui.select('opening', id, quiet, { roomId: el.dataset.room, type: el.dataset.type });
+      if (kind === 'roomwall') return Airly.ui.select('roomwall', id + ':' + el.dataset.wall, quiet, { roomId: id, wall: el.dataset.wall });
       Airly.ui.select(kind, id, quiet);
     }
     findOpening(roomId, id) {
@@ -375,12 +392,12 @@
       const kind = el.dataset.kind;
       const id = el.dataset.id;
       this.selectFromEl(el);
-      if (kind === 'room' && design) {
+      if ((kind === 'room' || kind === 'roomwall') && design) {
         const r = Airly.store.room(id);
         // parts of an L-shaped room move together
         const parts = r.group ? this.home.rooms.filter((x) => x.group === r.group) : [r];
         const ids = new Set(parts.map((x) => x.id));
-        this.drag = Object.assign(base, { kind, id, ox: p.x - r.x, oy: p.y - r.y, orig: { x: r.x, y: r.y },
+        this.drag = Object.assign(base, { kind: 'room', id, ox: p.x - r.x, oy: p.y - r.y, orig: { x: r.x, y: r.y },
           parts: parts.filter((x) => x !== r).map((x) => ({ x, dx: x.x - r.x, dy: x.y - r.y })),
           acs: this.home.acs.filter((a) => ids.has(a.roomId)).map((a) => ({ a, dx: a.x - r.x, dy: a.y - r.y })) });
       } else if (kind === 'resize' && design) {
@@ -456,9 +473,24 @@
         r.width = Math.max(1, this.snap(p.y - r.y));
         Airly.ui.clampRoomContents(r);
       } else if (d.kind === 'opening') {
+        // slide along the room's walls; near a corner it jumps to whichever wall is closest
         const { r, o } = d.f;
-        const along = o.wall === 'top' || o.wall === 'bottom' ? p.x - r.x : p.y - r.y;
-        o.offset = clamp(this.snap(along - d.grab), 0, Math.max(0, Airly.thermal.wallLength(r, o.wall) - o.w));
+        const cand = Airly.WALLS.map((w) => {
+          const L = Airly.thermal.wallLength(r, w);
+          const s = this.wallSeg(r, w);
+          const horiz = w === 'top' || w === 'bottom';
+          const along = horiz ? p.x - r.x : p.y - r.y;
+          const c = clamp(along, 0, L);
+          const dist = Math.hypot(p.x - (horiz ? r.x + c : s.x1), p.y - (horiz ? s.y1 : r.y + c));
+          return { w, L, along, dist };
+        }).filter((c) => c.L >= o.w);
+        const cur = cand.find((c) => c.w === o.wall);
+        let best = cand.reduce((a, b) => (b.dist < a.dist ? b : a), cur || cand[0]);
+        if (cur && best && best !== cur && cur.dist - best.dist < 0.15) best = cur; // small hysteresis at corners
+        if (best) {
+          if (best.w !== o.wall) { o.wall = best.w; d.grab = o.w / 2; }
+          o.offset = clamp(this.snap(best.along - d.grab), 0, Math.max(0, best.L - o.w));
+        }
       } else if (d.kind === 'ac') {
         const a = Airly.store.ac(d.id);
         a.x = Math.round((p.x - d.ox) * 100) / 100;
