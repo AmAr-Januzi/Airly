@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Airly — design your home, place air-conditioning units and simulate heating and cooling before you buy.">
+  <meta name="theme-color" content="#2a78d6">
+  <title>Airly — Home AC Simulator</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232a78d6'/%3E%3Cpath d='M14 26c8-6 14 6 22 0s10-4 14-2M14 38c8-6 14 6 22 0s10-4 14-2' stroke='white' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <script>/* the app manifest only works over http(s); browsers block it for files opened from disk */
+    if (/^https?:$/.test(location.protocol)) document.write('<link rel="manifest" href="manifest.webmanifest">');</script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="app.skip">Skip to content</a>
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Airly">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="currentColor"/><path d="M14 26c8-6 14 6 22 0s10-4 14-2M14 38c8-6 14 6 22 0s10-4 14-2" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+        <div><span class="brand-name">Airly</span><span class="brand-tag" data-i18n="app.tagline">Home AC Simulator</span></div>
+      </div>
+      <nav aria-label="Main navigation" data-i18n-aria="nav.main">
+        <ul class="nav">
+          <li><a class="nav-link" href="#dashboard" data-view="dashboard"><span class="ni" aria-hidden="true">◧</span><span data-i18n="nav.dashboard">Dashboard</span></a></li>
+          <li class="nav-group" data-i18n="nav.groupHome">My Home</li>
+          <li><a class="nav-link" href="#designer" data-view="designer"><span class="ni" aria-hidden="true">▦</span><span data-i18n="nav.designer">Home Designer</span></a></li>
+          <li><a class="nav-link" href="#rooms" data-view="rooms"><span class="ni" aria-hidden="true">📐</span><span data-i18n="nav.rooms">Room Measurements</span></a></li>
+          <li><a class="nav-link" href="#compare" data-view="compare"><span class="ni" aria-hidden="true">⚖</span><span data-i18n="nav.compare">Compare Homes</span></a></li>
+          <li><a class="nav-link" href="#acs" data-view="acs"><span class="ni" aria-hidden="true">❄</span><span data-i18n="nav.acs">AC Configuration</span></a></li>
+          <li class="nav-group" data-i18n="nav.groupSim">Simulation</li>
+          <li><a class="nav-link" href="#simulator" data-view="simulator"><span class="ni" aria-hidden="true">▶</span><span data-i18n="nav.simulator">AC Simulator</span></a></li>
+          <li><a class="nav-link" href="#analysis" data-view="analysis"><span class="ni" aria-hidden="true">🌡</span><span data-i18n="nav.analysis">Temperature Analysis</span></a></li>
+          <li><a class="nav-link" href="#recommendations" data-view="recommendations"><span class="ni" aria-hidden="true">💡</span><span data-i18n="nav.recommendations">Recommendations</span></a></li>
+          <li><a class="nav-link" href="#energy" data-view="energy"><span class="ni" aria-hidden="true">⚡</span><span data-i18n="nav.energy">Energy Consumption</span></a></li>
+          <li><a class="nav-link" href="#purchase" data-view="purchase"><span class="ni" aria-hidden="true">🛒</span><span data-i18n="nav.purchase">Purchase Comparison</span></a></li>
+          <li class="nav-group" data-i18n="nav.groupHelp">Help &amp; Care</li>
+          <li><a class="nav-link" href="#guide" data-view="guide"><span class="ni" aria-hidden="true">📘</span><span data-i18n="nav.guide">AC Usage Guide</span></a></li>
+          <li><a class="nav-link" href="#maintenance" data-view="maintenance"><span class="ni" aria-hidden="true">🧰</span><span data-i18n="nav.maintenance">Maintenance</span></a></li>
+          <li><a class="nav-link" href="#settings" data-view="settings"><span class="ni" aria-hidden="true">⚙</span><span data-i18n="nav.settings">Settings</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+    <div class="backdrop" data-action="menu" aria-hidden="true"></div>
+
+    <div class="main-col">
+      <header class="topbar">
+        <button type="button" class="btn icon menu-btn" id="menu-btn" data-action="menu" aria-controls="sidebar" aria-expanded="false" data-i18n-aria="top.menu" aria-label="Menu">☰</button>
+        <div class="top-title"><span class="top-home" id="top-home-name">My Home</span></div>
+        <div class="top-actions">
+          <div class="undo-group">
+            <button type="button" class="btn icon" id="undo-btn" data-action="undo" data-i18n-aria="undo.label" data-i18n-title="undo.title" aria-label="Undo" disabled>↶</button>
+            <button type="button" class="btn icon" id="redo-btn" data-action="redo" data-i18n-aria="redo.label" data-i18n-title="redo.title" aria-label="Redo" disabled>↷</button>
+          </div>
+          <label class="sr-only" for="lang-select" data-i18n="top.language">Language</label>
+          <select id="lang-select" class="lang-select" data-bind="pref.lang">
+            <option value="en">EN</option>
+          </select>
+          <div class="lang-switch" role="group" aria-label="Temperature unit" data-i18n-aria="top.tempUnit">
+            <button type="button" class="lang-btn unit-btn" data-action="unit" data-unit="C" aria-pressed="true">°C</button>
+            <button type="button" class="lang-btn unit-btn" data-action="unit" data-unit="F" aria-pressed="false">°F</button>
+          </div>
+          <button type="button" class="btn ghost hide-sm" data-action="openProjects"><span aria-hidden="true">🗂</span> <span data-i18n="top.projects">Projects</span></button>
+          <button type="button" class="btn primary" data-action="saveHome" data-i18n-aria="top.save" aria-label="Save Home"><span aria-hidden="true">💾</span> <span data-i18n="top.save" class="hide-xs">Save Home</span></button>
+        </div>
+      </header>
+      <main id="main" tabindex="-1">
+        <div id="view" class="view"></div>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="modal" aria-labelledby="modal-title"></dialog>
+  <dialog id="view3d" class="view3d-dialog" aria-labelledby="v3d-title"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Texts and translations -->
+  <script src="js/lang/base.js"></script>
+  <script src="js/core/i18n.js"></script>
+  <script src="js/lang/it.js"></script>
+  <script src="js/lang/de.js"></script>
+  <script src="js/lang/el.js"></script>
+  <!-- Data and saving -->
+  <script src="js/core/store.js"></script>
+  <!-- Thermal model and advice -->
+  <script src="js/model/thermal.js"></script>
+  <script src="js/model/recommend.js"></script>
+  <!-- Reusable UI pieces -->
+  <script src="js/ui/charts.js"></script>
+  <script src="js/ui/furniture.js"></script>
+  <script src="js/ui/floorplan.js"></script>
+  <script src="js/ui/view3d.js"></script>
+  <script src="js/ui/kit.js"></script>
+  <script src="js/ui/share.js"></script>
+  <!-- Screens (one file each) -->
+  <script src="js/views/dashboard.js"></script>
+  <script src="js/views/designer.js"></script>
+  <script src="js/views/rooms.js"></script>
+  <script src="js/views/acs.js"></script>
+  <script src="js/views/compare.js"></script>
+  <script src="js/views/simulator.js"></script>
+  <script src="js/views/analysis.js"></script>
+  <script src="js/views/recommendations.js"></script>
+  <script src="js/views/energy.js"></script>
+  <script src="js/views/purchase.js"></script>
+  <script src="js/views/guide.js"></script>
+  <script src="js/views/maintenance.js"></script>
+  <script src="js/views/settings.js"></script>
+  <!-- App controller — main.js starts the app, keep it last -->
+  <script src="js/app/state.js"></script>
+  <script src="js/app/shell.js"></script>
+  <script src="js/app/binding.js"></script>
+  <script src="js/app/actions.js"></script>
+  <script src="js/app/main.js"></script>
+</body>
+</html>

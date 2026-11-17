@@ -1,0 +1,15 @@
+{
+  "name": "airly",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Airly — browser-based home air-conditioning simulator (vanilla HTML/CSS/JS, no build step).",
+  "scripts": {
+    "start": "npx --yes serve -l 8080 .",
+    "test": "node tests/model.test.js && node tests/browser.test.js",
+    "test:model": "node tests/model.test.js",
+    "test:browser": "node tests/browser.test.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}
