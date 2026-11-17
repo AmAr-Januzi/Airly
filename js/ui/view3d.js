@@ -1389,7 +1389,6 @@
       <header class="v3d-head">
         <div class="v3d-title"><h2 id="v3d-title"><span aria-hidden="true">🧊</span> ${esc(t('v3d.title', { name: h.name || t('home.defaultName') }))}</h2><p id="v3d-status" class="muted small"></p></div>
         <div class="v3d-tools" role="toolbar" aria-label="${esc(t('v3d.tools'))}">
-          ${btn('reset', `<span aria-hidden="true">↺</span> ${esc(t('sim.reset'))}`)}
           ${btn('walk', '<span aria-hidden="true">🚶</span> ' + esc(t('v3d.walk')))}
           ${btn('overview', '<span aria-hidden="true">🏠</span> ' + esc(t('v3d.overview')), '', 'hidden')}
           ${(h.levels || 1) > 1 ? `<label class="sr-only" for="v3d-level">${esc(t('level.show'))}</label><select id="v3d-level" class="v3d-level"><option value="all">${esc(t('level.all'))}</option>${Array.from({ length: h.levels }, (_, k) => `<option value="${k}">${esc(t('level.upTo', { name: Airly.levelName(k) }))}</option>`).join('')}</select>` : ''}
@@ -1417,12 +1416,6 @@
           <div id="v3d-doors"></div>
           <h3 id="v3d-acs-title">${esc(t('v3d.acsAll'))}</h3>
           <div id="v3d-acs" class="v3d-acs"></div>
-          <div class="v3d-legend">
-            <div class="temp-legend"><span>${esc(t('legend.cooler'))}</span><span class="scale" aria-hidden="true"></span><span>${esc(t('legend.warmer'))}</span></div>
-            <p class="small"><span class="dot cool" aria-hidden="true"></span> ${esc(t('v3d.coolAir'))}</p>
-            <p class="small"><span class="dot heat" aria-hidden="true"></span> ${esc(t('v3d.warmAir'))}</p>
-          </div>
-          <p class="muted small">${esc(t('common.estimateNote'))}</p>
         </aside>
       </div></div>`;
     canvas = dlg.querySelector('#v3d-canvas');

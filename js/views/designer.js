@@ -89,7 +89,6 @@
           <header class="v3d-head studio-head">
             <div class="v3d-title"><h2><span aria-hidden="true">▦</span> ${esc(t('plan2d.title', { name: S().name || t('home.defaultName') }))}</h2><p id="d2-status" class="muted small">${esc(this.statusLine())}</p></div>
             <div class="v3d-tools" role="toolbar" aria-label="${esc(t('v3d.tools'))}">
-              ${btn('simReset', `<span aria-hidden="true">↺</span> ${esc(t('sim.reset'))}`)}
               ${btn('designerWalk', `<span aria-hidden="true">🚶</span> ${esc(t('v3d.walk'))}`)}
               ${btn('zoomOut', '−', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}
               ${btn('zoomIn', '+', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomIn'))}"`)}
