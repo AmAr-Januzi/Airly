@@ -89,7 +89,6 @@
           <header class="v3d-head studio-head">
             <div class="v3d-title"><h2><span aria-hidden="true">▦</span> ${esc(t('plan2d.title', { name: S().name || t('home.defaultName') }))}</h2><p id="d2-status" class="muted small">${esc(this.statusLine())}</p></div>
             <div class="v3d-tools" role="toolbar" aria-label="${esc(t('v3d.tools'))}">
-              ${btn('simToggle', this.simLabel(), 'primary').replace('<button', '<button id="d2-sim"')}
               ${btn('simReset', `<span aria-hidden="true">↺</span> ${esc(t('sim.reset'))}`)}
               ${btn('designerWalk', `<span aria-hidden="true">🚶</span> ${esc(t('v3d.walk'))}`)}
               ${btn('zoomOut', '−', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}
@@ -120,12 +119,7 @@
       const clock = hr != null ? (TH.sunAt(live.model.season, hr).e > 0 ? '☀ ' : '☾ ') + F().clock(hr) + ' · ' : '';
       return `${clock}${t('season.' + h.env.season)} · ${t('dash.outside')} ${F().temp(live.model ? live.outside() : TH.seasonOutside(h.env))} · ${t('sim.elapsed')} ${F().dur(live.model ? live.model.t : 0)}`;
     },
-    simLabel() {
-      const live = TH.live;
-      const started = live.model && live.model.t > 0;
-      return live.running ? `<span aria-hidden="true">⏸</span> ${esc(t('sim.pause'))}` : `<span aria-hidden="true">▶</span> ${esc(t(started ? 'sim.resume' : 'sim.start'))}`;
-    },
-    /* while the simulation runs: refresh the status, the button and the room temperatures a few times a second */
+    /* while a simulation runs (started from the AC Simulator): refresh the status and room temperatures a few times a second */
     tick() {
       const now = performance.now();
       if (this._lastTick && now - this._lastTick < 250 && TH.live.running) return;
@@ -133,8 +127,6 @@
       const st = document.getElementById('d2-status');
       if (!st) return;
       st.textContent = this.statusLine();
-      const b = document.getElementById('d2-sim');
-      if (b) { const html = this.simLabel(); if (b.innerHTML !== html) b.innerHTML = html; }
       if (plans.designer && !(plans.designer.drag && plans.designer.drag.moved)) plans.designer.render();
     },
     templatePicker() {

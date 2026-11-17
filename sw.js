@@ -1,7 +1,7 @@
 /* Airly service worker — keeps the app working offline.
  * Strategy: serve from the cache first, refresh the cache in the background.
  * Bump VERSION whenever files change so users get the new version. */
-const VERSION = 'airly-v29';
+const VERSION = 'airly-v30';
 const FILES = [
   './',
   './index.html',

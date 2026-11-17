@@ -991,8 +991,6 @@
     const hr = live.model ? live.hour() : null;
     const clock = hr != null ? (TH().sunAt(live.model.season, hr).e > 0 ? '☀ ' : '☾ ') + Airly.fmt.clock(hr) + ' · ' : '';
     st.textContent = `${clock}${t('season.' + season)} · ${t('dash.outside')} ${Airly.fmt.temp(live.model ? live.outside() : TH().seasonOutside(h.env))} · ${t('sim.elapsed')} ${Airly.fmt.dur(live.model ? live.model.t : 0)}`;
-    const play = dlg.querySelector('[data-v3d="sim"]');
-    play.innerHTML = live.running ? `<span aria-hidden="true">⏸</span> ${esc(t('sim.pause'))}` : `<span aria-hidden="true">▶</span> ${esc(started ? t('sim.resume') : t('sim.start'))}`;
     const walls = dlg.querySelector('[data-v3d="walls"]');
     walls.setAttribute('aria-pressed', String(wallMode === 'low'));
     walls.innerHTML = `<span aria-hidden="true">▤</span> ${esc(t(wallMode === 'low' ? 'v3d.wallsFull' : 'v3d.wallsLow'))}`;
@@ -1008,7 +1006,6 @@
     }).join('');
     if (list.dataset.html !== listHTML) { list.innerHTML = listHTML; list.dataset.html = listHTML; }
     updateACStatus();
-    dlg.querySelector('#v3d-note').hidden = !!started;
     const fr = focusRoom();
     dlg.querySelector('[data-v3d="overview"]').hidden = !fr;
     dlg.querySelector('[data-v3d="walk"]').hidden = !!fr;
@@ -1392,7 +1389,6 @@
       <header class="v3d-head">
         <div class="v3d-title"><h2 id="v3d-title"><span aria-hidden="true">🧊</span> ${esc(t('v3d.title', { name: h.name || t('home.defaultName') }))}</h2><p id="v3d-status" class="muted small"></p></div>
         <div class="v3d-tools" role="toolbar" aria-label="${esc(t('v3d.tools'))}">
-          ${btn('sim', '', 'primary')}
           ${btn('reset', `<span aria-hidden="true">↺</span> ${esc(t('sim.reset'))}`)}
           ${btn('walk', '<span aria-hidden="true">🚶</span> ' + esc(t('v3d.walk')))}
           ${btn('overview', '<span aria-hidden="true">🏠</span> ' + esc(t('v3d.overview')), '', 'hidden')}
@@ -1412,7 +1408,6 @@
           <canvas id="v3d-canvas" tabindex="0" role="img" aria-label="${esc(t('v3d.aria'))}"></canvas>
           <p class="v3d-hint" id="v3d-hint">${esc(t('v3d.hint'))}</p>
           <div class="v3d-hud" id="v3d-hud" aria-live="polite" hidden></div>
-          <p class="v3d-note" id="v3d-note">${esc(t('v3d.notStarted'))}</p>
         </div>
         <aside class="v3d-side">
           <h3>${esc(t('v3d.rooms'))}</h3>
