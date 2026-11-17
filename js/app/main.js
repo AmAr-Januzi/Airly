@@ -41,7 +41,7 @@
       }
     });
     let rt;
-    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (['analysis', 'simulator', 'energy', 'recommendations'].includes(ui.view)) render(); }, 250); });
+    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (['simulator', 'eco'].includes(ui.view)) render(); }, 250); });
 
     store.on('change', (source) => {
       if (source !== 'form') refreshRoomCache();

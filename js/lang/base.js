@@ -10,6 +10,11 @@
 
     /* navigation */
     'nav.dashboard': ['Dashboard', 'Paneli kryesor'],
+    'nav.eco': ['ECO', 'ECO'],
+    'eco.lede': ['Save energy and money: what your ACs cost to run, which AC to buy and what to improve.', 'Kurseni energji dhe para: sa kushton përdorimi i kondicionerëve, cilin kondicioner të blini dhe çfarë të përmirësoni.'],
+    'eco.tabEnergy': ['Energy', 'Energjia'],
+    'eco.tabPurchase': ['AC Purchase', 'Blerja e kondicionerit'],
+    'eco.tabRecs': ['Recommendations', 'Rekomandime'],
     'nav.designer': ['Home Designer', 'Projektuesi i shtëpisë'],
     'nav.rooms': ['Room Measurements', 'Matjet e dhomës'],
     'nav.acs': ['AC Configuration', 'Konfigurimi i kondicionerit'],

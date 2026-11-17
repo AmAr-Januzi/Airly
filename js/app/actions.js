@@ -137,14 +137,13 @@
       if (flip.length && confirm(t('confirm.switchModes', { n: flip.length, mode: t('mode.' + mode) }))) {
         flip.forEach((a) => { a.mode = mode; a.target = mode === 'heat' ? h.env.desiredHeat : Math.min(a.target, h.env.desiredCool); });
       }
-      Airly.views.analysis.season = null;
       Airly.views.recommendations.season = null;
       Airly.views.recommendations.compareResult = null;
       TH.live.reset(h);
       store.commit('season');
       render();
     },
-    anSeason: (d) => { Airly.views.analysis.season = d.season; render(); },
+    ecoTab: (d) => { Airly.views.eco.tab = d.tab; render(); const b = document.getElementById('etab-' + d.tab); if (b) b.focus(); },
     recSeason: (d) => { Airly.views.recommendations.season = d.season; Airly.views.recommendations.compareResult = null; render(); },
     addRoom: () => { addRoom(document.getElementById('new-room-type').value); render(); },
     addRoomQuick: () => { const r = addRoom('custom'); ui.roomId = r.id; render(); },

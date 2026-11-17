@@ -6,7 +6,7 @@
   const t = (k, p) => Airly.i18n.t(k, p);
   const esc = (s) => Airly.esc(s);
   const ui = Airly.ui;
-  const VIEWS = ['dashboard', 'designer', 'rooms', 'acs', 'simulator', 'analysis', 'recommendations', 'energy', 'purchase', 'guide', 'maintenance', 'settings'];
+  const VIEWS = ['dashboard', 'designer', 'rooms', 'acs', 'simulator', 'eco', 'guide', 'maintenance', 'settings'];
 
   /* ---------- Reminders ---------- */
   const DAY = 864e5;
@@ -80,6 +80,10 @@
   /* ---------- Routing ---------- */
   function show(view) {
     // Compare Homes lives inside the Home Designer now: open it there and scroll to it
+    // Energy, Purchase Comparison and Recommendations are tabs of ECO now; Temperature Analysis was removed
+    const ECO_TAB = { energy: 'energy', purchase: 'purchase', recommendations: 'recs' };
+    if (ECO_TAB[view]) { Airly.views.eco.tab = ECO_TAB[view]; history.replaceState(null, '', '#eco'); view = 'eco'; }
+    if (view === 'analysis') { history.replaceState(null, '', '#simulator'); view = 'simulator'; }
     if (view === 'compare') { ui.compareOpen = true; ui.scrollToCompare = true; history.replaceState(null, '', '#designer'); view = 'designer'; }
     if (!VIEWS.includes(view)) view = 'dashboard';
     // leaving the designer while it shows 3D: close the 3D view (it lives inside the designer page)

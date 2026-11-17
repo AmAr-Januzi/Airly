@@ -5,7 +5,8 @@
   const { t, S, P, TH, esc, F, field, num, tnum, timeInput, sel, btn, card, badge, estimateNote, head, views, stat } = Airly.kit;
 
   views.energy = {
-    render(el) {
+    render(el, opts) {
+      const compact = !!(opts && opts.compact); // ECO tab: only the important parts
       const h = S();
       const p = P();
       const cool = Airly.advisor.energy(h, 'cooling', p.hours);
@@ -48,21 +49,22 @@
           ${stat('📅', t('en.coolDaily'), money(cool.dailyKWh), F().num(cool.dailyKWh, 1) + ' kWh')}
           ${stat('📅', t('en.heatDaily'), money(heat.dailyKWh), F().num(heat.dailyKWh, 1) + ' kWh')}
         </div>
-        ${card('❄ ' + t('en.coolTitle', { out: F().temp(h.env.outsideSummer) }), table(cool, 'cool'), 'table-card')}
-        ${card('☀ ' + t('en.heatTitle', { out: F().temp(h.env.outsideWinter) }), table(heat, 'heat'), 'table-card')}
+        ${compact ? '' : card('❄ ' + t('en.coolTitle', { out: F().temp(h.env.outsideSummer) }), table(cool, 'cool'), 'table-card')}
+        ${compact ? '' : card('☀ ' + t('en.heatTitle', { out: F().temp(h.env.outsideWinter) }), table(heat, 'heat'), 'table-card')}
         <div class="grid-2">
           ${card(t('en.sensTitle', { season: t('season.' + season) }), `<div class="table-wrap" tabindex="0"><table><thead><tr><th scope="col">${esc(t('en.targetShift'))}</th><th scope="col">${esc(t('en.daily'))}</th><th scope="col">${esc(t('en.monthlyCost'))}</th><th scope="col">${esc(t('en.vsCurrent'))}</th></tr></thead><tbody>
             ${sens.map((s) => `<tr${s.dT === 0 ? ' class="total"' : ''}><th scope="row">${esc(s.dT === 0 ? '0' : F().tempDelta(s.dT, true))}</th><td>${F().num(s.kwh, 2)} kWh</td><td>${esc(money(s.kwh * p.days))}</td><td>${s.dT === 0 ? '—' : (s.kwh >= base ? '+' : '') + Math.round((s.kwh / base - 1) * 100) + '%'}</td></tr>`).join('')}
             </tbody></table></div><p class="muted small">${esc(t(season === 'heating' ? 'en.sensNoteHeat' : 'en.sensNoteCool'))}</p>`)}
-          ${card(t('en.hoursTitle'), `<div id="en-hours-chart"></div>`)}
+          ${compact ? this.strategyCard(season) : card(t('en.hoursTitle'), `<div id="en-hours-chart"></div>`)}
         </div>
+        ${compact ? this.yearCard() : `
         <div class="grid-2">${this.billCard()}${this.precoolCard()}</div>
         ${this.strategyCard(season)}
         ${this.yearCard()}
         ${card(t('en.compareTitle'), this.compareTable(season), 'table-card')}
-        ${card(t('en.ratedVsActual'), `<p>${esc(t('en.ratedVsActualText'))}</p>`)}
+        ${card(t('en.ratedVsActual'), `<p>${esc(t('en.ratedVsActualText'))}</p>`)}`}
         ${estimateNote()}`;
-      Airly.charts.bars(el.querySelector('#en-hours-chart'), {
+      if (el.querySelector('#en-hours-chart')) Airly.charts.bars(el.querySelector('#en-hours-chart'), {
         labels: hoursSens.map((x) => x.hh + ' h'),
         series: [{ name: t('en.monthlyCost'), values: hoursSens.map((x) => x.kwh * p.days * p.price), slot: 0 }],
         yFmt: (v) => F().money(v), ariaLabel: t('en.hoursTitle'),
