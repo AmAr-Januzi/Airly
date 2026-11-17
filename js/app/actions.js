@@ -550,12 +550,6 @@
       const b = document.querySelector(`[data-action="schedDay"][data-id="${d.id}"][data-day="${k}"]`);
       if (b) b.focus({ preventScroll: true });
     },
-    toggleTheme: () => {
-      const dark = document.documentElement.dataset.themeResolved === 'dark';
-      store.prefs.theme = dark ? 'light' : 'dark';
-      store.savePrefs(); applyTheme(); render();
-      toast(t(dark ? 'theme.nowLight' : 'theme.nowDark'));
-    },
     removePeriod: (d) => {
       const a = store.ac(d.id);
       if (!a || !a.schedule) return;

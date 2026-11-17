@@ -110,8 +110,6 @@
     document.querySelectorAll('.unit-btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.unit === (store.prefs.tempUnit || 'C'))));
     updateAvatar();
     applySidebar(false);
-    const tb = document.getElementById('theme-btn');
-    if (tb) { const dark = document.documentElement.dataset.themeResolved === 'dark'; const l = t(dark ? 'theme.toLight' : 'theme.toDark'); tb.setAttribute('aria-label', l); tb.title = l; }
     const nm = document.getElementById('top-home-name');
     if (nm) nm.textContent = store.state.name || t('home.defaultName');
     document.title = (store.state.name ? store.state.name + ' · ' : '') + 'Airly — ' + t('app.tagline');

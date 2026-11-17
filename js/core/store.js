@@ -436,6 +436,8 @@
       const p = Object.assign(defaultPrefs(), saved);
       // v2: the old default speed (60 min/s) was too fast to watch the room cool down
       if ((saved.v || 1) < 2) { if (+p.simSpeed === 60) p.simSpeed = 5; p.v = 2; }
+      // v3: the top-bar light / dark button was removed — go back to the original look
+      if ((p.v || 1) < 3) { p.theme = 'auto'; p.v = 3; }
       return p;
     })(),
 
