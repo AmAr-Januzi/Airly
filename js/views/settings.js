@@ -32,6 +32,8 @@
               ${btn('clearAll', esc(t('settings.clearAll')), 'danger')}
             </div>`)}
         </div>
+        ${card(t('profile.title'), `<div class="profile-row"><span class="profile-pic">${P().avatar ? `<img src="${P().avatar}" alt="${esc(t('profile.title'))}">` : `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="4" fill="currentColor"/><path d="M4 20.5c1.4-3.6 4.4-5.5 8-5.5s6.6 1.9 8 5.5" fill="currentColor"/></svg>`}</span>
+          <div><p class="muted small">${esc(t('profile.lede'))}</p><div class="row-gap">${btn('pickAvatar', esc(t(P().avatar ? 'profile.change' : 'profile.add')), 'primary small')}${P().avatar ? btn('removeAvatar', esc(t('profile.remove')), 'danger-ghost small') : ''}</div></div></div>`)}
         ${card(t('pwa.title'), `<p>${esc(t('pwa.lede'))}</p>
           ${Airly.ui.installPrompt ? btn('installApp', '⬇ ' + esc(t('pwa.install')), 'primary') : window.matchMedia && window.matchMedia('(display-mode: standalone)').matches ? `<p>${badge('good', t('pwa.running'))}</p>` : `<p class="muted small">${esc(t(/^https?:$/.test(location.protocol) ? 'pwa.howto' : 'pwa.needServer'))}</p>`}`)}
         ${card(t('settings.about'), `<p>${esc(t('settings.aboutText'))}</p>`)}`;

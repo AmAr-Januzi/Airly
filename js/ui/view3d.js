@@ -1514,6 +1514,8 @@
   Airly.view3d = {
     open,
     snapshot,
+    /* the light / dark colours changed */
+    recolor() { readColors(); },
     attach,
     closeInline,
     /* start walking (used by the 2D plan's "Walk around" button) */

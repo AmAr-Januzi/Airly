@@ -285,7 +285,7 @@
     const start = opStart();
     if (h.env.dayCycle) {
       const window = hours >= 24 ? null : [start, (start + hours) % 24];
-      const o = { forceMode: mode, season, hours: 48, clock0: 0, measureFrom: 24 * 3600, sampleEvery: 1800, opWindow: window };
+      const o = { forceMode: mode, season, hours: 48, clock0: 0, measureFrom: 24 * 3600, sampleEvery: 1800, opWindow: window, ignoreDays: true };
       if (extra.alwaysOn) o.alwaysOn = true;
       if (extra.forceWindow) { o.ignoreSchedules = false; o.opWindow = extra.forceWindow; h.acs.forEach((x) => (x.schedule = { enabled: true, periods: [{ on: hm(extra.forceWindow[0]), off: hm(extra.forceWindow[1]) }] })); }
       pred = T.predict(h, o);
@@ -296,8 +296,11 @@
     const perAC = h.acs.map((ac) => {
       const p = pred.perAC.find((x) => x.id === ac.id);
       const rated = T.acRatedKW(ac, mode);
-      const kWh = (p ? p.kWh : 0) * billK;
-      const oh = extra.alwaysOn ? 24 : extra.forceWindow ? spanOf(extra.forceWindow) : h.env.dayCycle ? opHoursOf(ac, hours) : hours;
+      // a timer that runs only some days of the week: average over the week (e.g. weekdays = 5/7)
+      const own = !extra.alwaysOn && !extra.forceWindow && h.env.dayCycle && ac.schedule && ac.schedule.enabled && ac.schedule.periods && ac.schedule.periods.length;
+      const share = own ? T.scheduleDays(ac.schedule).filter(Boolean).length / 7 : 1;
+      const kWh = (p ? p.kWh : 0) * billK * share;
+      const oh = (extra.alwaysOn ? 24 : extra.forceWindow ? spanOf(extra.forceWindow) : h.env.dayCycle ? opHoursOf(ac, hours) : hours) * share;
       return { ac, rated, opHours: oh, avgKW: oh > 0 ? kWh / oh : 0, dailyKWh: kWh, maxDailyKWh: rated * oh };
     });
     // discomfort only counts rooms that have their own AC

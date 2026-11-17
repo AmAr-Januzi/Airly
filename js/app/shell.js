@@ -6,7 +6,7 @@
   const t = (k, p) => Airly.i18n.t(k, p);
   const esc = (s) => Airly.esc(s);
   const ui = Airly.ui;
-  const VIEWS = ['dashboard', 'designer', 'rooms', 'acs', 'simulator', 'eco', 'guide', 'maintenance', 'settings'];
+  const VIEWS = ['dashboard', 'designer', 'rooms', 'acs', 'simulator', 'eco', 'care', 'settings'];
 
   /* ---------- Reminders ---------- */
   const DAY = 864e5;
@@ -90,6 +90,8 @@
     const dark = pref === 'dark' || (pref === 'auto' && mq && mq.matches);
     document.documentElement.dataset.theme = pref === 'auto' ? '' : pref;
     document.documentElement.dataset.themeResolved = dark ? 'dark' : 'light';
+    // the 3D view paints with its own copy of the colours: refresh them
+    if (Airly.view3d && Airly.view3d.recolor) Airly.view3d.recolor();
   }
   if (mq && mq.addEventListener) mq.addEventListener('change', () => { applyTheme(); render(); });
 
@@ -106,10 +108,47 @@
       ls.value = Airly.i18n.lang;
     }
     document.querySelectorAll('.unit-btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.unit === (store.prefs.tempUnit || 'C'))));
+    updateAvatar();
+    const tb = document.getElementById('theme-btn');
+    if (tb) { const dark = document.documentElement.dataset.themeResolved === 'dark'; const l = t(dark ? 'theme.toLight' : 'theme.toDark'); tb.setAttribute('aria-label', l); tb.title = l; }
     const nm = document.getElementById('top-home-name');
     if (nm) nm.textContent = store.state.name || t('home.defaultName');
     document.title = (store.state.name ? store.state.name + ' · ' : '') + 'Airly — ' + t('app.tagline');
   }
+
+  /* ---------- Sidebar: sliding highlight and profile photo ---------- */
+  function movePill() {
+    const sb = document.getElementById('sidebar');
+    if (!sb) return;
+    let pill = sb.querySelector('.nav-pill');
+    if (!pill) {
+      pill = document.createElement('span');
+      pill.className = 'nav-pill';
+      pill.setAttribute('aria-hidden', 'true');
+      sb.appendChild(pill);
+      sb.classList.add('has-pill');
+      const nav = sb.querySelector('nav');
+      if (nav) nav.addEventListener('scroll', () => movePill(), { passive: true });
+      window.addEventListener('resize', () => movePill());
+    }
+    const a = sb.querySelector('.nav-link.active');
+    if (!a || !a.offsetParent) { pill.style.opacity = '0'; return; }
+    const sr = sb.getBoundingClientRect(), ar = a.getBoundingClientRect();
+    pill.style.opacity = '1';
+    pill.style.width = ar.width + 'px';
+    pill.style.height = ar.height + 'px';
+    pill.style.transform = `translate(${ar.left - sr.left}px, ${ar.top - sr.top + sb.scrollTop}px)`;
+    // the first placement jumps straight there; after that it slides
+    if (!sb.classList.contains('pill-ready')) requestAnimationFrame(() => sb.classList.add('pill-ready'));
+  }
+  function updateAvatar() {
+    const img = document.getElementById('avatar-img'), ph = document.getElementById('avatar-ph');
+    if (!img || !ph) return;
+    const src = store.prefs.avatar || '';
+    if (src) { if (img.getAttribute('src') !== src) img.src = src; img.hidden = false; ph.style.display = 'none'; }
+    else { img.hidden = true; img.removeAttribute('src'); ph.style.display = ''; }
+  }
+  Airly.updateAvatar = updateAvatar;
 
   /* ---------- Routing ---------- */
   function show(view) {
@@ -117,6 +156,7 @@
     // Energy, Purchase Comparison and Recommendations are tabs of ECO now; Temperature Analysis was removed
     const ECO_TAB = { energy: 'energy', purchase: 'purchase', recommendations: 'recs' };
     if (ECO_TAB[view]) { Airly.views.eco.tab = ECO_TAB[view]; history.replaceState(null, '', '#eco'); view = 'eco'; }
+    if (view === 'guide' || view === 'maintenance') { Airly.views.care.tab = view; history.replaceState(null, '', '#care'); view = 'care'; }
     if (view === 'analysis') { history.replaceState(null, '', '#simulator'); view = 'simulator'; }
     if (view === 'compare') { ui.compareOpen = true; ui.scrollToCompare = true; history.replaceState(null, '', '#designer'); view = 'designer'; }
     if (!VIEWS.includes(view)) view = 'dashboard';
@@ -128,6 +168,7 @@
       a.classList.toggle('active', on);
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
+    movePill();
     document.body.classList.remove('nav-open');
     document.getElementById('menu-btn').setAttribute('aria-expanded', 'false');
     render();
@@ -158,5 +199,5 @@
   }
   Airly.render = render;
 
-  Airly.app = { VIEWS, DAY, show, applyTheme, applyStatic, notifyDue };
+  Airly.app = { VIEWS, DAY, show, applyTheme, applyStatic, notifyDue, movePill };
 })();

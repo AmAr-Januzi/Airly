@@ -151,6 +151,9 @@
       store.commit('season');
       render();
     },
+    careTab: (d) => { Airly.views.care.tab = d.tab; render(); const b = document.getElementById('ctab-' + d.tab); if (b) b.focus(); },
+    pickAvatar: () => { const f = document.getElementById('avatar-file'); if (f) f.click(); },
+    removeAvatar: () => { store.prefs.avatar = ''; store.savePrefs(); Airly.updateAvatar(); render(); toast(t('profile.removed')); },
     ecoTab: (d) => { Airly.views.eco.tab = d.tab; render(); const b = document.getElementById('etab-' + d.tab); if (b) b.focus(); },
     recSeason: (d) => { Airly.views.recommendations.season = d.season; Airly.views.recommendations.page = 0; Airly.views.recommendations.compareResult = null; render(); },
     recPage: (d) => {
@@ -512,6 +515,38 @@
       a.schedule.periods.push({ on: '06:00', off: '08:00' });
       a.schedule.enabled = true;
       store.commit('struct'); render();
+    },
+    schedDays: (d) => {
+      const a = store.ac(d.id);
+      if (!a) return;
+      a.schedule = a.schedule || { enabled: true, periods: [{ on: '17:00', off: '23:00' }] };
+      a.schedule.days = d.days;
+      if (d.days === 'custom' && !Array.isArray(a.schedule.customDays)) a.schedule.customDays = [0, 1, 2, 3, 4, 5, 6];
+      store.commit('struct'); render();
+      const b = document.querySelector(`[data-action="schedDays"][data-id="${d.id}"][data-days="${d.days}"]`);
+      if (b) b.focus({ preventScroll: true });
+    },
+    schedDay: (d) => {
+      const a = store.ac(d.id);
+      if (!a || !a.schedule) return;
+      const k = +d.day;
+      const list = Array.isArray(a.schedule.customDays) ? a.schedule.customDays.slice() : [0, 1, 2, 3, 4, 5, 6];
+      const i = list.indexOf(k);
+      if (i >= 0) {
+        if (list.length === 1) return toast(t('sched.oneDay'));
+        list.splice(i, 1);
+      } else list.push(k);
+      a.schedule.customDays = list.sort((x, y) => x - y);
+      a.schedule.days = 'custom';
+      store.commit('struct'); render();
+      const b = document.querySelector(`[data-action="schedDay"][data-id="${d.id}"][data-day="${k}"]`);
+      if (b) b.focus({ preventScroll: true });
+    },
+    toggleTheme: () => {
+      const dark = document.documentElement.dataset.themeResolved === 'dark';
+      store.prefs.theme = dark ? 'light' : 'dark';
+      store.savePrefs(); applyTheme(); render();
+      toast(t(dark ? 'theme.nowLight' : 'theme.nowDark'));
     },
     removePeriod: (d) => {
       const a = store.ac(d.id);

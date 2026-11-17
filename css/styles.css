@@ -94,9 +94,12 @@ a { color: var(--brand-ink); }
 .sidebar {
   width: var(--sidebar-w); flex: 0 0 var(--sidebar-w);
   background: var(--surface); border-right: 1px solid var(--border);
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
-  padding: 18px 12px 24px;
+  position: sticky; top: 0; height: 100vh; overflow: hidden;
+  padding: 18px 12px 14px;
+  display: flex; flex-direction: column; /* menu scrolls, Settings stays at the bottom */
 }
+.sidebar > nav { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.sidebar > nav:hover { scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; }
 .logo { width: 38px; height: 38px; color: var(--brand); flex: none; }
 .brand-name { display: block; font-weight: 750; font-size: 1.35rem; letter-spacing: -.02em; }
@@ -110,6 +113,30 @@ a { color: var(--brand-ink); }
 .nav-link:hover { background: var(--surface-2); color: var(--text); }
 .nav-link.active { background: var(--brand-soft); color: var(--brand-ink); font-weight: 650; }
 .ni { width: 22px; text-align: center; font-size: 1rem; }
+/* modern movement: a highlight that slides to the page you open, links that nudge on hover */
+.nav-link { position: relative; z-index: 1; transition: background-color .2s, color .2s, transform .22s cubic-bezier(.2, .8, .2, 1); }
+.nav-link:hover { transform: translateX(3px); }
+.nav-link .ni { transition: transform .22s cubic-bezier(.2, .8, .2, 1); }
+.nav-link:hover .ni { transform: scale(1.15); }
+.nav-pill { position: absolute; left: 0; top: 0; z-index: 0; border-radius: 10px; background: var(--brand-soft); box-shadow: inset 3px 0 0 var(--brand); opacity: 0; pointer-events: none; }
+.sidebar.pill-ready .nav-pill { transition: transform .38s cubic-bezier(.2, .8, .2, 1), height .38s cubic-bezier(.2, .8, .2, 1), width .38s, opacity .2s; }
+.sidebar.has-pill .nav-link.active, .sidebar.has-pill .nav-link.active:hover { background: transparent; }
+/* bottom of the sidebar: Settings and the profile photo */
+.side-foot { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px; }
+.side-foot .nav-link { flex: 1; min-width: 0; }
+.avatar-btn { flex: none; width: 38px; height: 38px; border-radius: 50%; padding: 0; border: 2px solid var(--border); background: var(--surface-2); color: var(--muted); cursor: pointer; overflow: hidden; display: grid; place-items: center; transition: border-color .2s, transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s; }
+.avatar-btn:hover { border-color: var(--brand); transform: scale(1.06); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent); }
+.avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-btn svg { width: 24px; height: 24px; margin-top: 4px; }
+.profile-row { display: flex; align-items: center; gap: 16px; }
+.profile-pic { flex: none; width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: var(--surface-2); color: var(--muted); border: 2px solid var(--border); display: grid; place-items: center; }
+.profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+.profile-pic svg { width: 44px; height: 44px; margin-top: 8px; }
+.profile-row p { margin: 0 0 8px; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-link, .nav-link .ni, .sidebar.pill-ready .nav-pill, .avatar-btn { transition: none; }
+  .nav-link:hover, .nav-link:hover .ni, .avatar-btn:hover { transform: none; }
+}
 .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar {
   position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px;
@@ -597,7 +624,7 @@ dialog::backdrop { background: rgba(10, 10, 8, .45); }
 }
 @media (max-width: 960px) {
   .menu-btn { display: inline-flex; }
-  .sidebar { position: fixed; left: 0; top: 0; z-index: 50; transform: translateX(-105%); transition: transform .2s; box-shadow: var(--shadow); }
+  .sidebar { position: fixed; left: 0; top: 0; z-index: 50; transform: translateX(-105%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); box-shadow: var(--shadow); }
   body.nav-open .sidebar { transform: none; }
   body.nav-open .backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; }
   .grid-2, .recs-layout { grid-template-columns: minmax(0, 1fr); }
@@ -734,3 +761,19 @@ dialog::backdrop { background: rgba(10, 10, 8, .45); }
   .r-shot { margin: 0 0 10px; page-break-inside: avoid; }
   .r-shot img { width: 100%; height: auto; max-height: 150mm; object-fit: contain; border-radius: 6px; border: 1px solid #ccc; display: block; }
 }
+
+/* AC timer: which days */
+.sched-days { display: grid; gap: 6px; margin-top: 8px; }
+.sched-days .segmented { width: 100%; }
+.sched-days .seg { flex: 1; justify-content: center; padding-left: 6px; padding-right: 6px; }
+.day-chips { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.day-chip { font: inherit; font-size: .74rem; font-weight: 650; min-height: 34px; padding: 0 2px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; }
+.day-chip:hover { border-color: var(--brand); }
+.day-chip.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.day-chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.sim-ac .periods .period { flex-wrap: wrap; }
+/* light / dark switch at the end of the top bar */
+.theme-btn { position: relative; overflow: hidden; font-size: 1.05rem; }
+.theme-btn span { position: absolute; inset: 0; display: grid; place-items: center; transition: transform .35s cubic-bezier(.2, .8, .2, 1), opacity .25s; }
+[data-theme-resolved="dark"] .theme-btn .ti-moon, :root:not([data-theme-resolved="dark"]) .theme-btn .ti-sun { transform: translateY(120%) rotate(40deg); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .theme-btn span, .day-chip { transition: none; } }

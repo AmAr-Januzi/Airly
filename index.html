@@ -29,11 +29,18 @@
           <li><a class="nav-link" href="#simulator" data-view="simulator"><span class="ni" aria-hidden="true">▶</span><span data-i18n="nav.simulator">AC Simulator</span></a></li>
           <li><a class="nav-link" href="#eco" data-view="eco"><span class="ni" aria-hidden="true">🌿</span><span data-i18n="nav.eco">ECO</span></a></li>
           <li class="nav-group" data-i18n="nav.groupHelp">Help &amp; Care</li>
-          <li><a class="nav-link" href="#guide" data-view="guide"><span class="ni" aria-hidden="true">📘</span><span data-i18n="nav.guide">AC Usage Guide</span></a></li>
-          <li><a class="nav-link" href="#maintenance" data-view="maintenance"><span class="ni" aria-hidden="true">🧰</span><span data-i18n="nav.maintenance">Maintenance</span></a></li>
-          <li><a class="nav-link" href="#settings" data-view="settings"><span class="ni" aria-hidden="true">⚙</span><span data-i18n="nav.settings">Settings</span></a></li>
+          <li><a class="nav-link" href="#care" data-view="care"><span class="ni" aria-hidden="true">🛟</span><span data-i18n="nav.care">Guide &amp; Maintenance</span></a></li>
         </ul>
       </nav>
+      <!-- pinned to the bottom of the sidebar: Settings and the profile photo -->
+      <div class="side-foot">
+        <a class="nav-link" href="#settings" data-view="settings"><span class="ni" aria-hidden="true">⚙</span><span data-i18n="nav.settings">Settings</span></a>
+        <button type="button" class="avatar-btn" id="avatar-btn" data-action="pickAvatar" data-i18n-aria="profile.change" data-i18n-title="profile.change" aria-label="Profile photo">
+          <img id="avatar-img" alt="" hidden>
+          <svg id="avatar-ph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="4" fill="currentColor"/><path d="M4 20.5c1.4-3.6 4.4-5.5 8-5.5s6.6 1.9 8 5.5" fill="currentColor"/></svg>
+        </button>
+        <input type="file" accept="image/*" id="avatar-file" class="sr-only" tabindex="-1" aria-hidden="true">
+      </div>
     </aside>
     <div class="backdrop" data-action="menu" aria-hidden="true"></div>
 
@@ -54,6 +61,7 @@
             <button type="button" class="lang-btn unit-btn" data-action="unit" data-unit="C" aria-pressed="true">°C</button>
             <button type="button" class="lang-btn unit-btn" data-action="unit" data-unit="F" aria-pressed="false">°F</button>
           </div>
+          <button type="button" class="btn icon theme-btn" id="theme-btn" data-action="toggleTheme" aria-label="Light / dark mode"><span class="ti-sun" aria-hidden="true">☀</span><span class="ti-moon" aria-hidden="true">☾</span></button>
         </div>
       </header>
       <main id="main" tabindex="-1">
@@ -96,6 +104,7 @@
   <script src="js/views/eco.js"></script>
   <script src="js/views/guide.js"></script>
   <script src="js/views/maintenance.js"></script>
+  <script src="js/views/care.js"></script>
   <script src="js/views/settings.js"></script>
   <!-- App controller — main.js starts the app, keep it last -->
   <script src="js/app/state.js"></script>

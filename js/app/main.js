@@ -23,6 +23,7 @@
     document.addEventListener('change', (ev) => {
       if (ev.target.id === 'import-file') return importFile(ev.target);
       if (ev.target.id === 'trace-file') return traceFile(ev.target);
+      if (ev.target.id === 'avatar-file') return avatarFile(ev.target);
       onInput(ev);
     });
     window.addEventListener('hashchange', () => {
@@ -94,6 +95,30 @@
   }
 
   /* Load a floor-plan image, shrink it (so it fits in browser storage) and place it under the plan */
+  /* profile photo: cropped to a square and made small, kept with the settings on this device */
+  function avatarFile(input) {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 160, s = Math.min(img.width, img.height);
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+        store.prefs.avatar = c.toDataURL('image/jpeg', 0.86);
+        store.savePrefs();
+        Airly.updateAvatar();
+        if (ui.view === 'settings') render();
+        toast(t('profile.saved'), 'good');
+      };
+      img.onerror = () => toast(t('trace.failed'), 'bad');
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(f);
+    input.value = '';
+  }
   function traceFile(input) {
     const f = input.files && input.files[0];
     if (!f) return;

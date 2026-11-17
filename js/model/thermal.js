@@ -90,6 +90,24 @@
     const m = /^(\d{1,2}):(\d{2})/.exec(s || '');
     return m ? (+m[1] % 24) + +m[2] / 60 : null;
   }
+  /* which days a timer runs, Monday first: weekdays, weekends, or the days picked (all 7 for older timers) */
+  function scheduleDays(sch) {
+    const d = sch && sch.days;
+    if (d === 'weekdays') return [true, true, true, true, true, false, false];
+    if (d === 'weekends') return [false, false, false, false, false, true, true];
+    const pick = sch && Array.isArray(sch.customDays) ? sch.customDays : [0, 1, 2, 3, 4, 5, 6];
+    return [0, 1, 2, 3, 4, 5, 6].map((k) => pick.includes(k));
+  }
+  /* day of the week in the simulation (0 = Monday) */
+  function weekdayOf(m) {
+    return ((m.day0 || 0) + Math.floor((m.clock0 * 3600 + m.t) / 86400)) % 7;
+  }
+  /* is the timer on now? a period that runs past midnight belongs to the day it started */
+  function timerOn(a, m) {
+    if (!a.days) return inPeriods(a.periods, m.hour);
+    const d = weekdayOf(m), h = m.hour;
+    return a.periods.some(([on, off]) => (on <= off ? h >= on && h < off && a.days[d] : (h >= on && a.days[d]) || (h < off && a.days[(d + 6) % 7])));
+  }
   function inPeriods(periods, h) {
     return periods.some(([a, b]) => (a <= b ? h >= a && h < b : h >= a || h < b));
   }
@@ -521,6 +539,8 @@
           mode,
           target: a.target,
           periods,
+          // days the AC's own timer runs (not for the energy calculator's daily window)
+          days: periods && !opts.ignoreDays && a.schedule && a.schedule.enabled && !opts.opWindow ? scheduleDays(a.schedule) : null,
           sleep: !opts.ignoreSchedules && !!a.sleep,
           scheduledOff: false,
           capW: acCapacityW(a),
@@ -543,7 +563,9 @@
           activeMode: null,
         };
       });
-    return { rooms, links, acs, Tout, Tg: groundTemp(dailyMeanOutside(envC, season)), t: 0, season, cycle, clock0, env: envC, wOut, north: env.north || 'top', comfort: home.rooms.map(() => 0) };
+    // the simulation starts on today's day of the week (0 = Monday)
+    const day0 = opts.day0 != null ? opts.day0 : (new Date().getDay() + 6) % 7;
+    return { day0, rooms, links, acs, Tout, Tg: groundTemp(dailyMeanOutside(envC, season)), t: 0, season, cycle, clock0, env: envC, wOut, north: env.north || 'top', comfort: home.rooms.map(() => 0) };
   }
 
   function updateTimeOfDay(m) {
@@ -608,7 +630,7 @@
       a.powerKW = 0;
       a.activeMode = null;
       // timer / schedule
-      a.scheduledOff = !!(a.on && a.periods && !inPeriods(a.periods, m.hour));
+      a.scheduledOff = !!(a.on && a.periods && !timerOn(a, m));
       if (!a.on || a.scheduledOff) { a.onT = 0; a.integ = 0; return; }
       const night = a.sleep && isNight(m.hour);
       a.nightActive = night;
@@ -752,7 +774,8 @@
       if (this.model && this.model.t > 0) this.model.rooms.forEach((r) => (initial[r.id] = { T: r.T, Tm: r.Tm, w: r.w }));
       const t = this.model ? this.model.t : 0;
       const kept = this.model ? this.model.acs.reduce((o, a) => ((o[a.id] = a), o), {}) : {};
-      this.model = buildModel(home, { initial: t > 0 ? initial : null });
+      const day0 = this.model ? this.model.day0 : undefined;
+      this.model = buildModel(home, { initial: t > 0 ? initial : null, day0 });
       this.model.t = t;
       this.model.acs.forEach((a) => {
         const k = kept[a.id];
@@ -830,6 +853,6 @@
     BTU_TO_W, geometry, adjacency, linkConductance, roomUA, roomGains, required, standardSize,
     acCapacityW, acRatedKW, acThrow, coverage, bestPlacement, buildModel, step, predict, live,
     exteriorWallCount, openingCenter, wallLength, desiredFor, seasonOutside, seasonInitial, COP,
-    outsideAt, dailyMeanOutside, sunAt, feelAt, comfortScore, acDir, blockersIn, segHitsBox, TALL, bestSpots, occupancy, rhFromW, wFromRH, parseHM, hourOf,
+    scheduleDays, weekdayOf, outsideAt, dailyMeanOutside, sunAt, feelAt, comfortScore, acDir, blockersIn, segHitsBox, TALL, bestSpots, occupancy, rhFromW, wFromRH, parseHM, hourOf,
   };
 })();

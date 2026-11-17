@@ -63,7 +63,7 @@
             ${field(t('ac.fan'), sel(k('fan'), opts(Airly.FAN_SPEEDS, 'fan.'), a.fan))}
             ${field(t('ac.direction'), sel(k('direction'), opts(Airly.DIRECTIONS, 'dir.'), a.direction))}
           </div>
-          ${scheduleControl(a, true)}
+          ${scheduleControl(a, false)}
           <div class="sim-ac-out muted small" data-acout="${a.id}"></div></div>`;
       }).join('');
     },
@@ -84,7 +84,8 @@
         if (live.model) {
           const hr = live.hour();
           const day = Math.floor((live.model.clock0 * 3600 + live.model.t) / 86400) + 1;
-          clock = (TH.sunAt(live.model.season, hr).e > 0 ? '☀ ' : '☾ ') + F().clock(hr) + ' · ' + t('sim.day', { n: day }) + ' · ';
+          const wd = Airly.kit.dayNames()[TH.weekdayOf(live.model)];
+          clock = (TH.sunAt(live.model.season, hr).e > 0 ? '☀ ' : '☾ ') + wd + ' ' + F().clock(hr) + ' · ' + t('sim.day', { n: day }) + ' · ';
         }
         st.textContent = `${clock}${t('season.' + h.env.season)} · ${t('dash.outside')} ${F().temp(live.model ? live.outside() : TH.seasonOutside(h.env))} · ${t('sim.elapsed')} ${F().dur(live.model ? live.model.t : 0)}`;
       }

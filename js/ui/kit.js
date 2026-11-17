@@ -109,17 +109,43 @@
     return `<select id="${id}" class="wall-pick">` + ['auto'].concat(Airly.WALLS).map((w) =>
       `<option value="${w}"${w === cur ? ' selected' : ''}>${esc(w === 'auto' ? t('op.autoWall') : t('wall.' + w))}</option>`).join('') + '</select>';
   }
+  /* short day names, Monday first, in the chosen language */
+  function dayNames() {
+    const loc = Airly.i18n.locale();
+    return [0, 1, 2, 3, 4, 5, 6].map((k) => new Date(2024, 0, 1 + k).toLocaleDateString(loc, { weekday: 'short' }));
+  }
+  /* which days a timer runs, as text: "Weekdays", "Weekends", "Mon, Wed, Fri" or "Every day" */
+  function daysLabel(sch) {
+    if (!sch) return '';
+    if (sch.days === 'weekdays') return t('sched.weekdays');
+    if (sch.days === 'weekends') return t('sched.weekends');
+    const on = TH.scheduleDays(sch);
+    if (on.every(Boolean)) return t('sched.everyDay');
+    const names = dayNames();
+    return on.map((v, k) => (v ? names[k] : null)).filter(Boolean).join(', ');
+  }
+  function daysControl(a, sch) {
+    const mode = sch.days === 'weekdays' || sch.days === 'weekends' ? sch.days : 'custom';
+    const on = TH.scheduleDays(sch);
+    const names = dayNames();
+    return `<div class="sched-days"><span class="label small" id="sd-${a.id}">${esc(t('sched.days'))}</span>
+      <div class="segmented" role="group" aria-labelledby="sd-${a.id}">${['weekdays', 'weekends', 'custom'].map((v) =>
+        `<button type="button" class="seg ${v === mode ? 'active' : ''}" aria-pressed="${v === mode}" data-action="schedDays" data-id="${a.id}" data-days="${v}">${esc(t('sched.' + v))}</button>`).join('')}</div>
+      ${mode === 'custom' ? `<div class="day-chips" role="group" aria-label="${esc(t('sched.pickDays'))}">${names.map((n, k) =>
+        `<button type="button" class="day-chip${on[k] ? ' on' : ''}" aria-pressed="${on[k]}" data-action="schedDay" data-id="${a.id}" data-day="${k}">${esc(n)}</button>`).join('')}</div>` : ''}
+    </div>`;
+  }
   function scheduleControl(a, compact) {
     const sch = a.schedule || { enabled: false, periods: [] };
     const k = (p) => `ac.${a.id}.${p}`;
     const periods = (sch.periods || []).map((p, i) => `<div class="period"><span class="muted small">${esc(t('sched.from'))}</span>${timeInput(`sched.${a.id}.${i}.on`, p.on, t('sched.on'))}<span class="muted small">${esc(t('sched.to'))}</span>${timeInput(`sched.${a.id}.${i}.off`, p.off, t('sched.off'))}${sch.periods.length > 1 ? btn('removePeriod', '✕', 'icon small danger-ghost', { id: a.id, idx: i }).replace('<button', `<button aria-label="${esc(t('common.remove'))}"`) : ''}</div>`).join('');
     if (compact) {
-      const summary = sch.enabled ? (sch.periods || []).map((p) => p.on + '–' + p.off).join(', ') : t('sched.none');
+      const summary = sch.enabled ? (sch.periods || []).map((p) => p.on + '–' + p.off).join(', ') + ' · ' + daysLabel(sch) : t('sched.none');
       return `<div class="sched-compact">${toggle(k('schedEnabled'), sch.enabled, t('sched.timer'))}<span class="muted small">${esc(summary)}</span>${toggle(k('sleep'), !!a.sleep, t('sched.night'))}</div>`;
     }
     return `<fieldset class="sched"><legend>${esc(t('sched.title'))}</legend>
       ${toggle(k('schedEnabled'), sch.enabled, t('sched.timer'))}
-      <div class="periods${sch.enabled ? '' : ' is-off'}">${periods}${btn('addPeriod', '＋ ' + esc(t('sched.add')), 'ghost small', { id: a.id })}</div>
+      <div class="periods${sch.enabled ? '' : ' is-off'}">${periods}${btn('addPeriod', '＋ ' + esc(t('sched.add')), 'ghost small', { id: a.id })}${daysControl(a, sch)}</div>
       ${toggle(k('sleep'), !!a.sleep, t('sched.night'))}<small class="hint">${esc(t('sched.nightHint'))}</small></fieldset>`;
   }
   function levelTabs(withEdit) {
@@ -162,5 +188,5 @@
     });
   }
 
-  Airly.kit = { t, S, P, TH, esc, F, field, num, tnum, timeInput, text, sel, check, toggle, opts, btn, card, seasonTabs, badge, estimateNote, head, roomOptions, capStatus, perfStatus, views, plans, mountPlan, stat, wallSelect, scheduleControl, levelTabs, speedLabel, orientControl, CUBE, btn3d, scoreBadge, capOptions, updateCalc };
+  Airly.kit = { t, S, P, TH, esc, F, field, num, tnum, timeInput, text, sel, check, toggle, opts, btn, card, seasonTabs, badge, estimateNote, head, roomOptions, capStatus, perfStatus, views, plans, mountPlan, stat, wallSelect, scheduleControl, daysLabel, dayNames, levelTabs, speedLabel, orientControl, CUBE, btn3d, scoreBadge, capOptions, updateCalc };
 })();
