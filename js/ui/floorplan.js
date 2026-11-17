@@ -339,10 +339,14 @@
       } else {
         s += `<line class="door-gap" x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}"/>`;
         if (o.open) {
-          const lx = g.x1 + g.nx * o.w, ly = g.y1 + g.ny * o.w;
+          // rotated 180°: hinge at the other end, swinging to the other side (a half turn keeps the arc direction)
+          const k = o.rot180 ? -1 : 1;
+          const hx = o.rot180 ? g.x2 : g.x1, hy = o.rot180 ? g.y2 : g.y1;
+          const fx = o.rot180 ? g.x1 : g.x2, fy = o.rot180 ? g.y1 : g.y2;
+          const lx = hx + g.nx * o.w * k, ly = hy + g.ny * o.w * k;
           const sweep = (g.nx === 0 ? (g.ny > 0 ? 1 : 0) : (g.nx > 0 ? 0 : 1));
-          s += `<line class="door-leaf" x1="${g.x1}" y1="${g.y1}" x2="${lx}" y2="${ly}"/>
-            <path class="door-arc" d="M${lx} ${ly} A${o.w} ${o.w} 0 0 ${sweep} ${g.x2} ${g.y2}"/>`;
+          s += `<line class="door-leaf" x1="${hx}" y1="${hy}" x2="${lx}" y2="${ly}"/>
+            <path class="door-arc" d="M${lx} ${ly} A${o.w} ${o.w} 0 0 ${sweep} ${fx} ${fy}"/>`;
         } else {
           s += `<line class="door-closed" x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}"/>`;
         }
@@ -559,6 +563,11 @@
       if ((ev.key === 'r' || ev.key === 'R') && sel.kind === 'furn' && !ev.ctrlKey && !ev.metaKey && this.mode === 'design') {
         ev.preventDefault();
         Airly.ui.rotateFurn(sel.id);
+        return;
+      }
+      if ((ev.key === 'r' || ev.key === 'R') && sel.kind === 'opening' && sel.type === 'door' && !ev.ctrlKey && !ev.metaKey && this.mode === 'design') {
+        ev.preventDefault();
+        Airly.ui.rotateDoor(sel.roomId, sel.id);
         return;
       }
       if ((ev.key === 'r' || ev.key === 'R') && sel.kind === 'ac' && !ev.ctrlKey && !ev.metaKey) {

@@ -6,7 +6,7 @@
   const KEY_CURRENT = 'airly.current';
   const KEY_PROJECTS = 'airly.projects';
   const KEY_PREFS = 'airly.prefs';
-  const SCHEMA = 2;
+  const SCHEMA = 3;
 
   const uid = () => Math.random().toString(36).slice(2, 9);
   const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -249,6 +249,70 @@
   function win(wall, offset, w, h) { return defaultOpening('window', wall, offset, w || 1.2, h || 1.3); }
   function door(wall, offset, open, w) { const d = defaultOpening('door', wall, offset, w || 0.9); d.open = open !== false; return d; }
   function room(type, x, y, L, W, extra) { return Object.assign(defaultRoom(type, x, y, L, W), extra || {}); }
+  /* Put a bathtub (or a shower when the room is small), a toilet and a washbasin — and a washing machine in
+     bigger bathrooms — against the walls of a bathroom, keeping the swing of every door free. */
+  function furnishBathroom(h, r) {
+    const lv = r.level || 0;
+    const X0 = r.x, Y0 = r.y, X1 = r.x + r.length, Y1 = r.y + r.width;
+    const placed = (h.furniture || []).filter((f) => (f.level || 0) === lv).map((f) => ({ x0: f.x, y0: f.y, x1: f.x + f.w, y1: f.y + f.d }));
+    // door swing areas: doors of this room, and doors of neighbours that open on this room's walls
+    const keepFree = [];
+    const onWall = (q, o) => {
+      const s = o.offset, e = o.offset + o.w;
+      if (o.wall === 'top') return { x0: q.x + s, x1: q.x + e, y: q.y, horiz: true };
+      if (o.wall === 'bottom') return { x0: q.x + s, x1: q.x + e, y: q.y + q.width, horiz: true };
+      if (o.wall === 'left') return { y0: q.y + s, y1: q.y + e, x: q.x, horiz: false };
+      return { y0: q.y + s, y1: q.y + e, x: q.x + q.length, horiz: false };
+    };
+    h.rooms.filter((q) => (q.level || 0) === lv).forEach((q) => (q.doors || []).forEach((o) => {
+      const g = onWall(q, o), m = o.w + 0.15;
+      if (g.horiz && (Math.abs(g.y - Y0) < 0.05 || Math.abs(g.y - Y1) < 0.05) && g.x1 > X0 && g.x0 < X1) {
+        keepFree.push(Math.abs(g.y - Y0) < 0.05 ? { x0: g.x0 - 0.1, x1: g.x1 + 0.1, y0: Y0, y1: Y0 + m } : { x0: g.x0 - 0.1, x1: g.x1 + 0.1, y0: Y1 - m, y1: Y1 });
+      } else if (!g.horiz && (Math.abs(g.x - X0) < 0.05 || Math.abs(g.x - X1) < 0.05) && g.y1 > Y0 && g.y0 < Y1) {
+        keepFree.push(Math.abs(g.x - X0) < 0.05 ? { x0: X0, x1: X0 + m, y0: g.y0 - 0.1, y1: g.y1 + 0.1 } : { x0: X1 - m, x1: X1, y0: g.y0 - 0.1, y1: g.y1 + 0.1 });
+      }
+    }));
+    const hits = (a, b, gap) => a.x0 < b.x1 + gap && b.x0 < a.x1 + gap && a.y0 < b.y1 + gap && b.y0 < a.y1 + gap;
+    // walls farthest from the doors first, so the bath ends up opposite the entrance
+    const doorMid = keepFree.length ? { x: (keepFree[0].x0 + keepFree[0].x1) / 2, y: (keepFree[0].y0 + keepFree[0].y1) / 2 } : { x: X0, y: Y0 };
+    const walls = ['top', 'right', 'bottom', 'left'].map((w) => {
+      const mid = w === 'top' ? { x: (X0 + X1) / 2, y: Y0 } : w === 'bottom' ? { x: (X0 + X1) / 2, y: Y1 } : w === 'left' ? { x: X0, y: (Y0 + Y1) / 2 } : { x: X1, y: (Y0 + Y1) / 2 };
+      return { w, d: Math.hypot(mid.x - doorMid.x, mid.y - doorMid.y) };
+    }).sort((a, b) => b.d - a.d).map((x) => x.w);
+    const put = (kind) => {
+      const c = Airly.FURNITURE[kind];
+      for (const w of walls) {
+        const horiz = w === 'top' || w === 'bottom';
+        const fw = horiz ? c.w : c.d, fd = horiz ? c.d : c.w; // footprint: back against the wall
+        const len = horiz ? r.length : r.width;
+        if (c.w > len) continue;
+        for (let s = 0; s <= len - c.w + 1e-9; s += 0.05) {
+          const x = horiz ? X0 + s : w === 'left' ? X0 : X1 - fw;
+          const y = horiz ? (w === 'top' ? Y0 : Y1 - fd) : Y0 + s;
+          const box = { x0: x, y0: y, x1: x + fw, y1: y + fd };
+          if (box.x1 > X1 + 1e-6 || box.y1 > Y1 + 1e-6) continue;
+          if (placed.some((p) => hits(box, p, 0.05)) || keepFree.some((k) => hits(box, k, 0))) continue;
+          const f = defaultFurniture(kind, Math.round(x * 100) / 100, Math.round(y * 100) / 100, lv);
+          if (!horiz) { f.w = fw; f.d = fd; f.rot = 90; }
+          h.furniture.push(f);
+          placed.push(box);
+          return true;
+        }
+      }
+      return false;
+    };
+    h.furniture = h.furniture || [];
+    if (!put('bathtub')) put('shower');
+    put('toilet');
+    put('sink');
+    if (r.length * r.width >= 7) put('washer');
+  }
+  /* bathrooms with nothing in them at all */
+  function emptyBathrooms(h) {
+    return h.rooms.filter((r) => r.type === 'bathroom' && !(h.furniture || []).some((f) => (f.level || 0) === (r.level || 0) &&
+      f.x + f.w / 2 > r.x && f.x + f.w / 2 < r.x + r.length && f.y + f.d / 2 > r.y && f.y + f.d / 2 < r.y + r.width));
+  }
+
   function templateHome(kind) {
     if (kind === 'apartment2' || !kind) return sampleHome();
     const h = emptyHome();
@@ -290,9 +354,10 @@
       const bath = room('bathroom', 4, 6.1, 3, 3.4, Object.assign({ exteriorWalls: 1, people: 0, appliancesW: 50, windows: [win('bottom', 1.2, 0.6, 0.6)], doors: [door('top', 0.5, false, 0.8)] }, g1));
       h.rooms.push(liv, kit, hall, wc, b1, b2, hall1, b3, bath);
       // stairs in the hallway go up (towards +x) to the landing on floor 1
-      h.furniture.push(furn('stairs', 6.5, 5.1, 90, 0), furn('sofa', 1.5, 3.8), furn('bed', 1.6, 0.5, 0, 1), furn('bed', 6.6, 0.5, 0, 1), furn('singleBed', 0.5, 7.2, 90, 1), furn('wardrobe', 4.4, 6.4, 90, 1));
+      h.furniture.push(furn('stairs', 6.5, 5.1, 90, 0), furn('sofa', 1.5, 3.8), furn('bed', 1.6, 0.5, 0, 1), furn('bed', 6.6, 0.5, 0, 1), furn('singleBed', 0.5, 7.2, 90, 1), furn('wardrobe', 3.4, 7.3, 90, 1));
       ac(liv, 18000); ac(b1, 9000); ac(b2, 9000);
     }
+    emptyBathrooms(h).forEach((r) => furnishBathroom(h, r));
     return h;
   }
 
@@ -355,6 +420,8 @@
     out.scenarios = Array.isArray(h.scenarios) ? h.scenarios : [];
     out.maintenance = Object.assign({ checks: {}, lastFilterClean: null }, h.maintenance || {});
     out.levels = Math.max(+h.levels || 1, ...out.rooms.map((r) => (r.level || 0) + 1), 1);
+    // v3: bathrooms came with no furniture before — furnish the empty ones once
+    if ((h.schema || 1) < 3) emptyBathrooms(out).forEach((r) => furnishBathroom(out, r));
     return out;
   }
 
@@ -518,7 +585,7 @@
   };
 
   Airly.store = store;
-  Airly.factory = { defaultRoom, defaultOpening, defaultAC, defaultEnv, sampleHome, emptyHome, normalizeHome, templateHome, defaultFurniture };
+  Airly.factory = { furnishBathroom, defaultRoom, defaultOpening, defaultAC, defaultEnv, sampleHome, emptyHome, normalizeHome, templateHome, defaultFurniture };
   Airly.TEMPLATES = ['studio', 'apartment1', 'apartment2', 'lshape', 'house'];
 
   window.addEventListener('beforeunload', () => store.flush());

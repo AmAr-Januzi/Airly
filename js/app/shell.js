@@ -49,6 +49,40 @@
   }
   Airly.toast = toast;
 
+  /* ---------- Confirm dialog ----------
+     A styled replacement for the browser's confirm() box. Resolves true (OK) or false (Cancel, Esc, click outside).
+     opts: { title, message, ok, cancel, icon, danger } */
+  function confirmDialog(opts) {
+    return new Promise((resolve) => {
+      let dlg = document.getElementById('confirm-dlg');
+      if (!dlg) {
+        dlg = document.createElement('dialog');
+        dlg.id = 'confirm-dlg';
+        dlg.className = 'confirm-dlg';
+        dlg.setAttribute('aria-labelledby', 'confirm-title');
+        dlg.setAttribute('aria-describedby', 'confirm-text');
+        document.body.appendChild(dlg);
+      }
+      dlg.innerHTML = `<form method="dialog" class="confirm-inner">
+        ${opts.icon ? `<div class="confirm-icon${opts.danger ? ' is-danger' : ''}" aria-hidden="true">${opts.icon}</div>` : ''}
+        <h2 id="confirm-title">${esc(opts.title || '')}</h2>
+        ${opts.message ? `<p id="confirm-text">${esc(opts.message)}</p>` : ''}
+        <div class="confirm-actions">
+          <button type="submit" class="btn ghost" value="no">${esc(opts.cancel || t('common.cancel'))}</button>
+          <button type="submit" class="btn ${opts.danger ? 'danger' : 'primary'}" value="yes" autofocus>${esc(opts.ok || 'OK')}</button>
+        </div></form>`;
+      const done = () => { dlg.removeEventListener('close', done); resolve(dlg.returnValue === 'yes'); };
+      dlg.returnValue = '';
+      dlg.addEventListener('close', done);
+      // a click on the dark area around the box counts as "cancel"
+      dlg.onclick = (ev) => { if (ev.target === dlg) dlg.close('no'); };
+      dlg.showModal();
+      const ok = dlg.querySelector('[value="yes"]');
+      if (ok) ok.focus();
+    });
+  }
+  Airly.confirmDialog = confirmDialog;
+
   /* ---------- Theme ---------- */
   const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   function applyTheme() {

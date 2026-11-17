@@ -56,6 +56,16 @@
       }
       return h.purchase;
     },
+    /* turn a door half way round: hinge at the other end, opening to the other side */
+    rotateDoor(roomId, id) {
+      const r = store.room(roomId);
+      const o = r && r.doors.find((x) => x.id === id);
+      if (!o) return;
+      o.rot180 = !o.rot180;
+      store.commit('struct');
+      render();
+      toast(t('door.rotated'));
+    },
     rotateAC(id) {
       const a = store.ac(id);
       if (!a) return;

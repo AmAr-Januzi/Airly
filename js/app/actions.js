@@ -38,6 +38,7 @@
     r.level = ui.level || 0;
     if (h.levels > 1) r.floorLevel = r.level === 0 ? 'ground' : r.level === h.levels - 1 ? 'top' : 'middle';
     h.rooms.push(r);
+    if (type === 'bathroom') Airly.factory.furnishBathroom(h, r); // a new bathroom comes furnished
     ui.sel = { kind: 'room', id: r.id };
     ui.roomId = r.id;
     store.commit('add');
@@ -127,14 +128,20 @@
 
   const actions = {
     go: (d) => (location.hash = '#' + d.view),
-    setSeason: (d) => {
+    setSeason: async (d) => {
       const h = store.state;
       if (h.env.season === d.season) return;
       h.env.season = d.season;
       const mode = d.season === 'heating' ? 'heat' : 'cool';
       const other = d.season === 'heating' ? 'cool' : 'heat';
       const flip = h.acs.filter((a) => a.mode === other);
-      if (flip.length && confirm(t('confirm.switchModes', { n: flip.length, mode: t('mode.' + mode) }))) {
+      if (flip.length && await Airly.confirmDialog({
+        icon: mode === 'heat' ? '☀' : '❄',
+        title: t('confirm.switchTitle', { mode: t('mode.' + mode) }),
+        message: t('confirm.switchText', { n: flip.length, from: t('mode.' + other), mode: t('mode.' + mode) }),
+        ok: t('confirm.switchYes', { mode: t('mode.' + mode) }),
+        cancel: t('confirm.switchNo'),
+      })) {
         flip.forEach((a) => { a.mode = mode; a.target = mode === 'heat' ? h.env.desiredHeat : Math.min(a.target, h.env.desiredCool); });
       }
       Airly.views.recommendations.season = null;
@@ -277,6 +284,7 @@
       store.commit('struct'); render();
       toast(t(f.open ? 'fridge.opened' : 'fridge.closed'));
     },
+    rotateDoor: (d) => ui.rotateDoor(d.room, d.id),
     toggleDoorOpen: (d) => {
       const r = store.room(d.room);
       const o = r && r.doors.find((x) => x.id === d.id);

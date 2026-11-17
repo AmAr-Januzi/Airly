@@ -447,8 +447,11 @@
               // opening only: the door leaf is drawn by the room that owns the door
             } else if (o.open) {
               // door leaf swung 90° into the room from its hinge
-              const hx = L.ax + ux * s0, hz = L.az + uz * s0;
-              const ex = hx + L.nx * o.w, ez = hz + L.nz * o.w;
+              // rotated 180°: hinge at the other end, opening to the other side of the wall
+              const k = o.rot180 ? -1 : 1;
+              const hs = o.rot180 ? s1 : s0;
+              const hx = L.ax + ux * hs, hz = L.az + uz * hs;
+              const ex = hx + L.nx * o.w * k, ez = hz + L.nz * o.w * k;
               const top = Math.min(dh, Hh + 0.6);
               polys.push({ room: r.id, inner: true, door: ref, pts: [[hx, 0, hz], [ex, 0, ez], [ex, top, ez], [hx, top, hz]], fill: shade(colors.door, lambert(ux, 0, uz), focus === r.id ? 0.35 : 1), stroke: shade(colors.door, 0.7, focus === r.id ? 0.6 : 1) });
             } else {

@@ -697,3 +697,17 @@ dialog::backdrop { background: rgba(10, 10, 8, .45); }
 .sim-sec .tool-group { margin: 0; }
 .sim-sec .field { margin: 0; }
 .sim-legend { position: absolute; left: 12px; bottom: 10px; z-index: 3; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; margin: 0; box-shadow: var(--shadow); }
+
+/* confirm dialog in the app's own style (replaces the browser's confirm box) */
+.confirm-dlg { width: min(440px, calc(100vw - 32px)); border-radius: 18px; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 24px 70px rgba(0, 0, 0, .35); padding: 0; }
+.confirm-dlg[open] { animation: confirm-in .18s ease-out; }
+.confirm-dlg::backdrop { background: rgba(8, 10, 14, .55); backdrop-filter: blur(3px); }
+.confirm-inner { padding: 26px 24px 20px; text-align: center; }
+.confirm-icon { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%; display: grid; place-items: center; font-size: 1.6rem; background: var(--brand-soft); color: var(--brand); }
+.confirm-icon.is-danger { background: color-mix(in srgb, var(--critical) 16%, transparent); color: var(--critical); }
+.confirm-inner h2 { margin: 0 0 8px; font-size: 1.2rem; }
+.confirm-inner p { margin: 0 auto; color: var(--text-2); line-height: 1.5; max-width: 34ch; }
+.confirm-actions { display: flex; gap: 10px; margin-top: 22px; }
+.confirm-actions .btn { flex: 1; justify-content: center; min-height: 44px; }
+@keyframes confirm-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .confirm-dlg[open] { animation: none; } }

@@ -191,7 +191,7 @@
           ${field(t('op.wall'), sel(`${key}.wall`, opts(Airly.WALLS, 'wall.'), o.wall))}
           ${field(t('op.offset'), num(`${key}.offset`, o.offset, 0, 40, 0.1), { unit: 'm' })}
           <div class="field-row">${field(t('op.w'), num(`${key}.w`, o.w, 0.3, 10, 0.1), { unit: 'm' })}${field(t('op.h'), num(`${key}.h`, o.h, 0.3, 4, 0.1), { unit: 'm' })}</div>
-          ${s.type === 'door' ? `<div class="field">${doorBtn(r, o, 'door-toggle-big')}</div>` : ''}
+          ${s.type === 'door' ? `<div class="field">${doorBtn(r, o, 'door-toggle-big')}</div><div class="field">${btn('rotateDoor', '<span aria-hidden="true">⟳</span> ' + esc(t('door.rotate')), 'door-toggle-big', { room: r.id, id: o.id })}<small class="hint">${esc(t('door.rotateHint'))}</small></div>` : ''}
           <div class="row-gap">${btn('deleteSel', esc(t('common.delete')), 'danger-ghost small')}</div>`;
       } else if (s.kind === 'ac') {
         const a = Airly.store.ac(s.id);
