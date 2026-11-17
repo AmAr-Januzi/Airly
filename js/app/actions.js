@@ -373,12 +373,16 @@
       ui.precool = { roomId, arrive, target, res: Airly.advisor.precool(store.state, roomId, arrive, target, season) };
       render();
     },
-    compareToggle: (d) => {
-      ui.compareSel = ui.compareSel || ['current'];
-      const i = ui.compareSel.indexOf(d.key);
-      if (i >= 0) ui.compareSel.splice(i, 1);
-      else if (ui.compareSel.length < 4) ui.compareSel.push(d.key);
-      else toast(t('cmp.max'));
+    cmpAdd: () => {
+      const slots = ui.compareSlots || (ui.compareSlots = [{ home: 'current', floor: 'all' }]);
+      if (slots.length >= 4) return toast(t('cmp.max'));
+      slots.push({ home: 'current', floor: 'all' });
+      render();
+    },
+    cmpRemove: (d) => {
+      const slots = ui.compareSlots;
+      if (!slots || slots.length <= 1) return;
+      slots.splice(+d.idx, 1);
       render();
     },
     serviceDone: () => { store.state.maintenance.lastService = Date.now(); store.commit('struct'); render(); toast(t('remind.serviceSaved'), 'good'); },
@@ -486,6 +490,11 @@
       ui.calib = null;
       store.commit('struct'); render();
       toast(t('calib.applied'), 'good');
+    },
+    designer3d: () => {
+      if (!store.state.rooms.length) return toast(t('toast.needRoom'));
+      ui.designer3d = true;
+      render();
     },
     open3d: () => {
       if (!store.state.rooms.length) return toast(t('toast.needRoom'));

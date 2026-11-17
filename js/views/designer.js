@@ -16,15 +16,6 @@
     }
     return `<div class="field best-box">${btn('bestSpots', (on ? '✕ ' : '★ ') + esc(t(on ? 'best.hide' : 'best.show')), 'small', { id: a.id })}<small class="hint">${esc(t('best.hint'))}</small>${info}</div>`;
   }
-  function legendPlan() {
-    return `<h3>${esc(t('legend.title'))}</h3><ul class="plan-legend">
-      <li><span class="lg lg-room" aria-hidden="true"></span>${esc(t('legend.room'))}</li>
-      <li><span class="lg lg-window" aria-hidden="true"></span>${esc(t('plan.window'))}</li>
-      <li><span class="lg lg-door" aria-hidden="true"></span>${esc(t('plan.door'))}</li>
-      <li><span class="lg lg-ac" aria-hidden="true"></span>${esc(t('legend.ac'))}</li>
-      <li><span class="lg lg-cov" aria-hidden="true"></span>${esc(t('legend.coverage'))}</li></ul>`;
-  }
-
   const FURN_ICON = { sofa: '🛋', bed: '🛏', singleBed: '🛏', armchair: '💺', table: '🍽', desk: '🖥', wardrobe: '🗄', shelf: '📚', kitchen: '🍳', fridge: '🧊', tv: '📺', stairs: '🪜' };
 
   /* Side panel when nothing (or a room wall) is selected: everything you can add */
@@ -68,7 +59,6 @@
         ${toggle('pref.showCoverage', p.showCoverage, t('plan.coverage'))}
         <div class="row-gap">${btn('resetLayout', esc(t('designer.resetLayout')), 'danger-ghost small')}</div>
       </section>
-      <details class="studio-sec"><summary>${esc(t('legend.title'))}</summary>${legendPlan().replace(/<h3>.*?<\/h3>/, '')}</details>
       <p class="muted small">${esc(t('designer.help'))}</p>`;
   }
   function openingsOfRoom(r) {
@@ -83,12 +73,20 @@
 
   views.designer = {
     render(el) {
-      el.innerHTML = head('nav.designer') + `
+      // 3D: the 3D view takes the same place at the top of the page, with its own panel on the right
+      if (Airly.ui.designer3d && S().rooms.length) {
+        el.innerHTML = `<h1 class="sr-only">${esc(t('nav.designer'))}</h1><section class="studio studio-3d card" id="studio-3d" aria-label="3D"></section>${this.traceCard()}`;
+        const host = el.querySelector('#studio-3d');
+        if (!Airly.view3d.attach(host)) Airly.view3d.open(host);
+        return;
+      }
+      Airly.ui.designer3d = false;
+      el.innerHTML = `<h1 class="sr-only">${esc(t('nav.designer'))}</h1>
         <section class="studio card" aria-label="${esc(t('designer.tools'))}">
           <div class="studio-stage">
             <div class="studio-mode segmented" role="group" aria-label="2D / 3D">
               <button type="button" class="seg active" aria-pressed="true">2D</button>
-              <button type="button" class="seg" data-action="open3d" aria-pressed="false" title="${esc(t('v3d.open'))}">${Airly.kit.CUBE} 3D</button>
+              <button type="button" class="seg" data-action="designer3d" aria-pressed="false" title="${esc(t('v3d.open'))}">${Airly.kit.CUBE} 3D</button>
             </div>
             <div class="studio-zoom">
               ${btn('zoomOut', '−', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}

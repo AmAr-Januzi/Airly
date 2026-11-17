@@ -1069,7 +1069,7 @@
     }
   }
   function ensureDialog() {
-    dlg = document.getElementById('view3d');
+    dlg = dlg || document.getElementById('view3d');
     if (dlg.dataset.ready) return;
     dlg.dataset.ready = '1';
     // keys work anywhere in the 3D window, except while typing in a field or choosing in a menu
@@ -1125,6 +1125,12 @@
     });
     dlg.addEventListener('close', () => {
       held.clear();
+      // shown inside the designer: hand the 3D window back to the page and show the 2D plan again
+      if (dlg.classList.contains('inline')) {
+        dlg.classList.remove('inline');
+        Airly.ui.designer3d = false;
+        document.body.appendChild(dlg);
+      }
       if (focus) { focus = null; wallMode = savedWallMode || 'full'; savedWallMode = null; }
       if (raf) cancelAnimationFrame(raf);
       raf = null;
@@ -1230,8 +1236,10 @@
     });
   }
 
-  function open() {
+  /* host: show the 3D view inside this element (the designer) instead of as a full-screen window */
+  function open(host) {
     ensureDialog();
+    if (host) { host.appendChild(dlg); dlg.classList.add('inline'); }
     readColors();
     const h = Airly.store.state;
     const btn = (a, label, cls, extra) => `<button type="button" class="btn ${cls || ''}" data-v3d="${a}" ${extra || ''}>${label}</button>`;
@@ -1284,7 +1292,7 @@
     focus = null;
     showLevel = 'all';
     fit();
-    if (!dlg.open) dlg.showModal();
+    if (!dlg.open) { if (host) dlg.show(); else dlg.showModal(); }
     updatePanel(true);
     renderACs();
     renderDoors();
@@ -1293,8 +1301,22 @@
     if (!raf) raf = requestAnimationFrame(frame);
   }
 
+  /* the designer re-draws its page often: put the running inline 3D view back into the new page */
+  function attach(host) {
+    if (!dlg || !dlg.open || !dlg.classList.contains('inline')) return false;
+    host.appendChild(dlg);
+    if (!raf) raf = requestAnimationFrame(frame);
+    return true;
+  }
+  /* leaving the designer: close the inline 3D view */
+  function closeInline() {
+    if (dlg && dlg.open && dlg.classList.contains('inline')) dlg.close();
+  }
+
   Airly.view3d = {
     open,
+    attach,
+    closeInline,
     /* test hook: what is under a canvas point */
     _pickAt: (x, y) => pickAt(x, y),
     _cam: () => Object.assign({}, cam),

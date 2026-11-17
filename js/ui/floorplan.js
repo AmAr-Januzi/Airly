@@ -89,7 +89,19 @@
     fit() {
       const b = this.bounds();
       const pad = this.mode === 'mini' ? 0.4 : 1.2;
-      this.vb = { x: b.x - pad, y: b.y - pad, w: Math.max(4, b.w + pad * 2), h: Math.max(3, b.h + pad * 2) };
+      let x = b.x - pad, y = b.y - pad, w = Math.max(4, b.w + pad * 2), h = Math.max(3, b.h + pad * 2);
+      if (this.mode === 'design') {
+        // the designer plan fills the screen height, but keeps the zoom of the classic plan box
+        // (at most 68% of the window, 640 px): the extra height only shows more space around the house
+        const r = this.svg.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          const refH = Math.min(r.height, Math.max(360, Math.min(window.innerHeight * 0.68, 640)));
+          const k = Math.min(r.width / w, refH / h);
+          const nw = r.width / k, nh = r.height / k;
+          x -= (nw - w) / 2; y -= (nh - h) / 2; w = nw; h = nh;
+        }
+      }
+      this.vb = { x, y, w, h };
       this.applyVB();
     }
     applyVB() {

@@ -80,6 +80,8 @@
   /* ---------- Routing ---------- */
   function show(view) {
     if (!VIEWS.includes(view)) view = 'dashboard';
+    // leaving the designer while it shows 3D: close the 3D view (it lives inside the designer page)
+    if (view !== ui.view && Airly.view3d && Airly.view3d.closeInline) { ui.view = view; Airly.view3d.closeInline(); }
     ui.view = view;
     document.querySelectorAll('.nav-link').forEach((a) => {
       const on = a.dataset.view === view;
