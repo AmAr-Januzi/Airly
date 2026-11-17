@@ -18,7 +18,8 @@
       const w = p.x1 - p.x0, d = p.y1 - p.y0;
       if (w <= 0.001 || d <= 0.001) return;
       const r = Math.min(p.r || 0, w / 2, d / 2);
-      s += `<rect class="furn-part" x="${n(p.x0)}" y="${n(p.y0)}" width="${n(w)}" height="${n(d)}"${r ? ` rx="${n(r)}"` : ''} fill="${col(p.mat)}" stroke="${col(p.mat, 0.72)}"/>`;
+      const al = L.alpha ? L.alpha(p.mat) : 1; // glass and mirrors are see-through
+      s += `<rect class="furn-part" x="${n(p.x0)}" y="${n(p.y0)}" width="${n(w)}" height="${n(d)}"${r ? ` rx="${n(r)}"` : ''} fill="${col(p.mat)}" stroke="${col(p.mat, 0.72)}"${al < 1 ? ` fill-opacity="${al}"` : ''}/>`;
     });
     ps.filter((p) => p.disc).forEach((p) => (s += `<circle class="furn-part" cx="${n(p.cx)}" cy="${n(p.cy)}" r="${n(p.rad)}" fill="none" stroke="${col(p.mat)}" stroke-width="0.025"/>`));
     ps.filter((p) => p.line).forEach((p) => (s += `<line class="furn-part" x1="${n(p.x0)}" y1="${n(p.y0)}" x2="${n(p.x1)}" y2="${n(p.y1)}" stroke="${col(p.mat)}" stroke-width="0.02"/>`));

@@ -271,6 +271,13 @@
       ui.sel = { kind: 'opening', id: o.id, roomId: r.id, type: d.type };
       store.commit('add'); render();
     },
+    toggleFridge: (d) => {
+      const f = (store.state.furniture || []).find((x) => x.id === d.id);
+      if (!f) return;
+      f.open = !f.open;
+      store.commit('struct'); render();
+      toast(t(f.open ? 'fridge.opened' : 'fridge.closed'));
+    },
     toggleDoorOpen: (d) => {
       const r = store.room(d.room);
       const o = r && r.doors.find((x) => x.id === d.id);

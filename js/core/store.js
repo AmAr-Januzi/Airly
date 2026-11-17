@@ -44,6 +44,11 @@
     kitchen: { w: 2.4, d: 0.6, h: 0.9 },
     fridge: { w: 0.7, d: 0.7, h: 1.85 },
     tv: { w: 1.4, d: 0.45, h: 0.55 },
+    toilet: { w: 0.4, d: 0.7, h: 0.8 },
+    sink: { w: 0.6, d: 0.45, h: 0.85 },
+    bathtub: { w: 1.7, d: 0.75, h: 0.58 },
+    shower: { w: 0.9, d: 0.9, h: 2.0 },
+    washer: { w: 0.6, d: 0.6, h: 0.85 },
     stairs: { w: 1.0, d: 3.0, h: 0 },
   };
   // simulation speeds in simulated minutes per real second (1/60 = real time)
@@ -217,6 +222,8 @@
       furn('kitchen', 7.2, 0.25), furn('fridge', 9.1, 4.1), furn('table', 7.6, 2.6),
       furn('bed', 1.0, 8.2, 90), furn('wardrobe', 0.25, 6.75, 90),
       furn('singleBed', 4.3, 8.3), furn('desk', 6.2, 6.8, 90),
+      // bathroom: bathtub along the right wall, toilet and washbasin on the left, washing machine by the door
+      furn('bathtub', 9.25, 8.6, 90), furn('toilet', 7.5, 7.9, 90), furn('sink', 7.5, 9.1, 90), furn('washer', 9.4, 6.55),
     ];
     const ac = defaultAC(living.id, 3, 0.25, 18000);
     ac.brand = 'Generic';

@@ -16,7 +16,7 @@
     }
     return `<div class="field best-box">${btn('bestSpots', (on ? '✕ ' : '★ ') + esc(t(on ? 'best.hide' : 'best.show')), 'small', { id: a.id })}<small class="hint">${esc(t('best.hint'))}</small>${info}</div>`;
   }
-  const FURN_ICON = { sofa: '🛋', bed: '🛏', singleBed: '🛏', armchair: '💺', table: '🍽', desk: '🖥', wardrobe: '🗄', shelf: '📚', kitchen: '🍳', fridge: '🧊', tv: '📺', stairs: '🪜' };
+  const FURN_ICON = { sofa: '🛋', bed: '🛏', singleBed: '🛏', armchair: '💺', table: '🍽', desk: '🖥', wardrobe: '🗄', shelf: '📚', kitchen: '🍳', fridge: '🧊', tv: '📺', stairs: '🪜', toilet: '🚽', sink: '🚰', bathtub: '🛁', shower: '🚿', washer: '🧺' };
 
   /* Side panel when nothing (or a room wall) is selected: everything you can add */
   function buildPanel() {
@@ -189,7 +189,11 @@
         const f = (S().furniture || []).find((x) => x.id === s.id);
         if (!f) return (box.innerHTML = '');
         const k = (p) => `furn.${f.id}.${p}`;
+        const fridgeBtn = f.kind === 'fridge'
+          ? `<div class="field"><button type="button" class="btn door-toggle door-toggle-big ${f.open ? 'is-open' : ''}" data-action="toggleFridge" data-id="${f.id}" aria-pressed="${!!f.open}"><span aria-hidden="true">🧊</span> ${esc(t(f.open ? 'fridge.close' : 'fridge.open'))}</button></div>`
+          : '';
         html = `<h2>${esc(t('furn.' + f.kind))}</h2>
+          ${fridgeBtn}
           ${field(t('furn.type'), sel(k('kind'), Object.keys(Airly.FURNITURE).map((x) => ({ v: x, l: t('furn.' + x) })), f.kind))}
           <div class="field-row">${field(t('room.width'), num(k('w'), f.w, 0.2, 10, 0.1), { unit: 'm' })}${field(t('room.length'), num(k('d'), f.d, 0.2, 10, 0.1), { unit: 'm' })}</div>
           ${f.kind === 'stairs' ? `<p class="muted small">${esc(t('furn.stairsHelp', { from: Airly.levelName(f.level || 0), to: Airly.levelName((f.level || 0) + 1) }))}</p>` : field(t('op.h'), num(k('h'), f.h, 0.1, 3, 0.05), { unit: 'm', hint: f.h >= TH.TALL ? t('furn.tallHint') : t('furn.lowHint') })}

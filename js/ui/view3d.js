@@ -517,6 +517,7 @@
       const maxZ = room.height - 0.05;
       LK.parts(f, h).forEach((p, bi) => {
         const rgb = LK.rgb(p.mat);
+        const al = LK.alpha ? LK.alpha(p.mat) : 1;
         if (p.line) return; // 2D-only drawing lines
         if (p.disc) {
           const pts = [];
@@ -526,10 +527,10 @@
         }
         const x0 = p.x0, x1 = p.x1, z0 = p.y0, z1 = p.y1, y0 = Math.min(p.z0, maxZ), y1 = Math.min(p.z1, maxZ);
         if (y1 - y0 < 0.002) return;
-        const edge = shade(rgb, 0.62, 0.55);
-        const faces = [{ pts: [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], fill: shade(rgb, 1.1), stroke: edge }];
+        const edge = shade(rgb, 0.62, 0.55 * al);
+        const faces = [{ pts: [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], fill: shade(rgb, 1.1, al), stroke: edge }];
         [[[x0, z0], [x1, z0], 0, -1], [[x1, z0], [x1, z1], 1, 0], [[x1, z1], [x0, z1], 0, 1], [[x0, z1], [x0, z0], -1, 0]].forEach(([a, b, nx, nz]) => {
-          faces.push({ pts: [[a[0], y0, a[1]], [b[0], y0, b[1]], [b[0], y1, b[1]], [a[0], y1, a[1]]], fill: shade(rgb, lambert(nx, 0, nz) * 0.9), stroke: edge, n: [nx, nz], mid: [(a[0] + b[0]) / 2, (y0 + y1) / 2, (a[1] + b[1]) / 2] });
+          faces.push({ pts: [[a[0], y0, a[1]], [b[0], y0, b[1]], [b[0], y1, b[1]], [a[0], y1, a[1]]], fill: shade(rgb, lambert(nx, 0, nz) * 0.9, al), stroke: edge, n: [nx, nz], mid: [(a[0] + b[0]) / 2, (y0 + y1) / 2, (a[1] + b[1]) / 2] });
         });
         group.push({ box: bi, c: [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2], faces });
       });
@@ -843,7 +844,7 @@
               return pp ? { pp, fc, d: depthOf(pp) } : null;
             }).filter(Boolean).sort((a, c) => c.d - a.d).forEach(({ pp, fc }) => {
               poly(pp, fc.fill, fc.stroke, 0.6);
-              pickHits.push({ pp, depth: depthOf(pp), door: null });
+              pickHits.push({ pp, depth: depthOf(pp), door: null, furn: pl.furn });
             });
           });
         },
@@ -1075,6 +1076,13 @@
       if (st) box.insertAdjacentHTML('beforeend', `<div class="row-gap v3d-stairs">${st}</div>`);
     }
     if (keep) { const el = box.querySelector(keep); if (el) el.focus({ preventScroll: true }); }
+  }
+  function toggleFridge(id) {
+    const f = (Airly.store.state.furniture || []).find((x) => x.id === id);
+    if (!f) return;
+    f.open = !f.open;
+    Airly.store.commit('form');
+    Airly.toast(t(f.open ? 'fridge.opened' : 'fridge.closed'));
   }
   function toggleDoor(roomId, doorId) {
     const r = Airly.store.room(roomId);
@@ -1322,7 +1330,9 @@
       if (d && d.sx != null && Math.hypot(ev.clientX - d.sx, ev.clientY - d.sy) < 5) {
         const rect = canvas.getBoundingClientRect();
         const hit = pickAt(ev.clientX - rect.left, ev.clientY - rect.top);
-        if (hit && hit.door) {
+        const fr = hit && hit.furn && (Airly.store.state.furniture || []).find((f) => f.id === hit.furn);
+        if (fr && fr.kind === 'fridge') toggleFridge(fr.id);
+        else if (hit && hit.door) {
           const dd = doorInfo(hit.door);
           if (focus && dd && dd.d.open && dd.other) goThrough(hit.door);
           else toggleDoor(hit.door.room, hit.door.id);
@@ -1334,7 +1344,8 @@
       if (drag) return;
       const rect = canvas.getBoundingClientRect();
       const hit = pickAt(ev.clientX - rect.left, ev.clientY - rect.top);
-      canvas.style.cursor = hit && (hit.door || (!focus && hit.room)) ? 'pointer' : '';
+      const isFridge = hit && hit.furn && (Airly.store.state.furniture || []).some((f) => f.id === hit.furn && f.kind === 'fridge');
+      canvas.style.cursor = hit && (hit.door || isFridge || (!focus && hit.room)) ? 'pointer' : '';
     });
     canvas.addEventListener('pointerup', up);
     canvas.addEventListener('pointercancel', up);

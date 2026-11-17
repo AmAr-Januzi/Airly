@@ -22,13 +22,17 @@
     steel: [170, 176, 184], black: [36, 37, 42], screen: [22, 27, 38],
     chair: [128, 94, 64], seatPad: [160, 120, 84],
     book1: [176, 64, 56], book2: [62, 104, 150], book3: [214, 170, 72], book4: [86, 132, 92],
+    porcelain: [246, 246, 242], basin: [214, 220, 224], glass: [170, 206, 228], mirror: [196, 214, 226],
+    interior: [250, 250, 246],
   };
+  // see-through materials (3D and 2D): 0 = invisible, 1 = solid
+  const ALPHA = { glass: 0.28, mirror: 0.85 };
 
   /* Which side is the back (against the wall)? 'top' = smaller y, 'bottom', 'left' = smaller x, 'right'.
      The axis follows the footprint; within it the side nearest a wall is the back. R (rotate) cycles
      through all four directions: rot 180/270 flip the automatic choice. */
-  const BACK_ON_LONG_SIDE = { sofa: 1, armchair: 1, desk: 1, wardrobe: 1, shelf: 1, kitchen: 1, fridge: 1, tv: 1 };
-  const BACK_ON_SHORT_SIDE = { bed: 1, singleBed: 1 };
+  const BACK_ON_LONG_SIDE = { sofa: 1, armchair: 1, desk: 1, wardrobe: 1, shelf: 1, kitchen: 1, fridge: 1, tv: 1, sink: 1, bathtub: 1, shower: 1, washer: 1 };
+  const BACK_ON_SHORT_SIDE = { bed: 1, singleBed: 1, toilet: 1 };
   function backSide(f, home) {
     if (!BACK_ON_LONG_SIDE[f.kind] && !BACK_ON_SHORT_SIDE[f.kind]) return null;
     let alongX; // true: back is the top or bottom edge
@@ -214,11 +218,93 @@
         break;
       }
       case 'fridge': {
-        block(0, 0, W, D - 0.03, 0, H, 'white', 0.03);
+        const zf = H * 0.345; // top of the freezer
         block(0.01, D - 0.03, W - 0.01, D, 0.02, H * 0.34, 'front', 0.02); // freezer door
-        block(0.01, D - 0.03, W - 0.01, D, H * 0.35, H - 0.01, 'front', 0.02); // fridge door
         block(0.06, D, 0.09, D + 0.03, H * 0.2, H * 0.31, 'steel');
-        block(0.06, D, 0.09, D + 0.03, H * 0.4, H * 0.6, 'steel');
+        if (!f.open) {
+          block(0, 0, W, D - 0.03, 0, H, 'white', 0.03);
+          block(0.01, D - 0.03, W - 0.01, D, H * 0.35, H - 0.01, 'front', 0.02); // fridge door
+          block(0.06, D, 0.09, D + 0.03, H * 0.4, H * 0.6, 'steel');
+          break;
+        }
+        // open: a hollow cabinet with lit shelves and food, the door swung out on its hinge (right side)
+        const t = 0.03, front = D - 0.03;
+        block(0, 0, W, front, 0, zf, 'white', 0.03); // freezer body
+        block(0, 0, W, t, zf, H, 'white'); // back
+        block(0, 0, t, front, zf, H, 'white'); // left side
+        block(W - t, 0, W, front, zf, H, 'white'); // right side
+        block(0, 0, W, front, H - t, H, 'white', 0.03); // top
+        block(t, t, W - t, front, zf, zf + 0.02, 'interior'); // floor
+        block(t, t, W - t, t + 0.01, zf + 0.02, H - t, 'interior'); // lit back wall
+        const food = ['book1', 'book3', 'book4', 'book2', 'white', 'book1'];
+        const shelves = [0.3, 0.55, 0.78].map((k) => zf + (H - t - zf) * k);
+        shelves.forEach((z, i) => {
+          block(t, t, W - t, front - 0.02, z, z + 0.012, 'glass'); // glass shelf
+          // a few items standing below this shelf
+          const z0 = i === 0 ? zf + 0.02 : shelves[i - 1] + 0.012;
+          [[0.08, 0.1, 0.2], [0.26, 0.12, 0.14], [0.46, 0.09, 0.17]].forEach(([u, sz, hh], j) => {
+            if (u + sz < W - t - 0.02) block(u, 0.12 + j * 0.08, u + sz, 0.12 + j * 0.08 + sz, z0, Math.min(z - 0.01, z0 + hh), food[(i * 2 + j) % food.length], 0.02);
+          });
+        });
+        // the door, turned 90° outwards around the hinge at the front right corner, with racks on its inside
+        const dl = W - 0.02;
+        block(W - 0.03, front, W, front + dl, H * 0.35, H - 0.01, 'front', 0.02);
+        [0.45, 0.68, 0.88].forEach((k) => block(W - 0.12, front + 0.05, W - 0.03, front + dl - 0.05, zf + (H - zf) * k - 0.08, zf + (H - zf) * k - 0.06, 'white'));
+        block(W, front + dl - 0.09, W + 0.03, front + dl - 0.06, H * 0.4, H * 0.6, 'steel'); // handle
+        break;
+      }
+      case 'toilet': {
+        const ch = Math.min(H, 0.82);
+        block(0.02, 0, W - 0.02, 0.18, 0.38, ch, 'porcelain', 0.03); // cistern
+        block(W / 2 - 0.035, 0.06, W / 2 + 0.035, 0.12, ch, ch + 0.01, 'steel'); // flush button
+        block(W * 0.22, 0.14, W * 0.78, D - 0.14, 0, 0.36, 'porcelain', 0.06); // pedestal
+        block(0.03, 0.16, W - 0.03, D - 0.02, 0.3, 0.39, 'porcelain', 0.16); // bowl
+        block(0.04, 0.18, W - 0.04, D - 0.03, 0.39, 0.42, 'white', 0.16); // seat
+        break;
+      }
+      case 'sink': {
+        block(0, 0, W, D - 0.06, 0, 0.1, 'plinth');
+        block(0, 0, W, D - 0.02, 0.1, 0.8, 'oak', 0.01); // vanity cabinet
+        block(0.02, D - 0.02, W / 2 - 0.01, D, 0.14, 0.76, 'wood'); // doors
+        block(W / 2 + 0.01, D - 0.02, W - 0.02, D, 0.14, 0.76, 'wood');
+        block(-0.01, 0, W + 0.01, D + 0.01, 0.8, 0.85, 'porcelain', 0.04); // top
+        block(0.09, 0.1, W - 0.09, D - 0.06, 0.85, 0.852, 'basin', 0.12); // basin
+        block(W / 2 - 0.02, 0.03, W / 2 + 0.02, 0.07, 0.85, 1.0, 'steel'); // tap
+        block(W / 2 - 0.02, 0.03, W / 2 + 0.02, 0.15, 0.97, 1.0, 'steel');
+        block(0.04, 0, W - 0.04, 0.02, 1.08, 1.75, 'mirror', 0.02); // mirror on the wall
+        break;
+      }
+      case 'bathtub': {
+        const rim = 0.08, top = Math.min(H, 0.58);
+        block(0, 0, W, D, 0, 0.14, 'porcelain', 0.06); // base
+        block(0, 0, W, rim, 0.14, top, 'porcelain'); // sides
+        block(0, D - rim, W, D, 0.14, top, 'porcelain');
+        block(0, rim, rim + 0.04, D - rim, 0.14, top, 'porcelain');
+        block(W - rim - 0.04, rim, W, D - rim, 0.14, top, 'porcelain');
+        block(rim + 0.04, rim, W - rim - 0.04, D - rim, 0.14, 0.16, 'basin', 0.2); // inside
+        block(W - 0.32, 0.015, W - 0.28, 0.055, top, top + 0.16, 'steel'); // tap
+        block(W - 0.32, 0.015, W - 0.28, 0.16, top + 0.13, top + 0.16, 'steel');
+        break;
+      }
+      case 'shower': {
+        const top = Math.min(H, 2.0);
+        block(0, 0, W, D, 0, 0.06, 'porcelain', 0.02); // tray
+        disc(W / 2, D / 2, 0.05, 0.061, 'steel'); // drain
+        block(0, D - 0.015, W, D, 0.06, top, 'glass'); // glass front
+        block(W - 0.015, 0, W, D - 0.015, 0.06, top, 'glass'); // glass side
+        block(W * 0.45, D, W * 0.45 + 0.02, D + 0.025, 0.9, 1.15, 'steel'); // door handle
+        block(W / 2 - 0.015, 0, W / 2 + 0.015, 0.03, 1.0, top - 0.05, 'steel'); // pipe
+        block(W / 2 - 0.11, 0.03, W / 2 + 0.11, 0.25, top - 0.08, top - 0.05, 'steel', 0.1); // rain head
+        block(W / 2 - 0.06, 0, W / 2 + 0.06, 0.03, 1.0, 1.08, 'steel'); // mixer
+        break;
+      }
+      case 'washer': {
+        block(0, 0, W, D - 0.02, 0, H, 'white', 0.02);
+        block(0.01, D - 0.02, W - 0.01, D, H - 0.13, H - 0.01, 'front'); // control panel
+        block(0.04, D, 0.2, D + 0.01, H - 0.1, H - 0.05, 'black', 0.01); // display
+        block(W - 0.14, D, W - 0.06, D + 0.02, H - 0.11, H - 0.04, 'steel', 0.04); // knob
+        block(W / 2 - 0.2, D - 0.02, W / 2 + 0.2, D + 0.02, 0.18, 0.58, 'steel', 0.2); // door ring
+        block(W / 2 - 0.15, D, W / 2 + 0.15, D + 0.025, 0.23, 0.53, 'black', 0.15); // door glass
         break;
       }
       case 'tv': {
@@ -237,5 +323,6 @@
   }
 
   const rgb = (mat) => MAT[mat] || MAT.wood;
-  Airly.furnitureLook = { parts, backSide, rgb, MAT };
+  const alpha = (mat) => (ALPHA[mat] != null ? ALPHA[mat] : 1);
+  Airly.furnitureLook = { parts, backSide, rgb, alpha, MAT };
 })();
