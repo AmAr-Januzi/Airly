@@ -61,10 +61,12 @@
       </section>
       <p class="muted small">${esc(t('designer.help'))}</p>`;
   }
+  /* open / close a door with one click */
+  const doorBtn = (r, o, cls) => `<button type="button" class="btn door-toggle ${o.open ? 'is-open' : ''} ${cls || ''}" data-action="toggleDoorOpen" data-room="${r.id}" data-id="${o.id}" aria-pressed="${!!o.open}"><span aria-hidden="true">${o.open ? '🚪' : '▮'}</span> ${esc(t(o.open ? 'door.close' : 'door.open'))}</button>`;
   function openingsOfRoom(r) {
     const items = r.doors.map((o) => ({ o, type: 'door' })).concat(r.windows.map((o) => ({ o, type: 'window' })));
     const list = items.length ? `<ul class="op-mini">${items.map(({ o, type }) =>
-      `<li><span aria-hidden="true">${type === 'door' ? '🚪' : '🪟'}</span> ${esc(t(type === 'door' ? 'plan.door' : 'plan.window'))} · ${esc(t('wall.' + o.wall))} ${sel(`op.${r.id}.${type === 'door' ? 'doors' : 'windows'}.${o.id}.wall`, opts(Airly.WALLS, 'wall.'), o.wall).replace('<select', `<select aria-label="${esc(t('op.wall'))}"`)}</li>`).join('')}</ul>`
+      `<li><span aria-hidden="true">${type === 'door' ? '🚪' : '🪟'}</span> ${esc(t(type === 'door' ? 'plan.door' : 'plan.window'))} · ${esc(t('wall.' + o.wall))} ${sel(`op.${r.id}.${type === 'door' ? 'doors' : 'windows'}.${o.id}.wall`, opts(Airly.WALLS, 'wall.'), o.wall).replace('<select', `<select aria-label="${esc(t('op.wall'))}"`)}${type === 'door' ? doorBtn(r, o, 'small') : ''}</li>`).join('')}</ul>`
       : `<p class="muted small">${esc(t('studio.noOpenings'))}</p>`;
     return `<section class="studio-sec"><h3>${esc(t('studio.openingsInRoom'))}</h3>${list}
       <div class="row-gap">${btn('addOpening', '🚪 ' + esc(t('designer.addDoor')), 'small', { room: r.id, type: 'doors' })}${btn('addOpening', '🪟 ' + esc(t('designer.addWindow')), 'small', { room: r.id, type: 'windows' })}</div>
@@ -168,7 +170,7 @@
           ${field(t('op.wall'), sel(`${key}.wall`, opts(Airly.WALLS, 'wall.'), o.wall))}
           ${field(t('op.offset'), num(`${key}.offset`, o.offset, 0, 40, 0.1), { unit: 'm' })}
           <div class="field-row">${field(t('op.w'), num(`${key}.w`, o.w, 0.3, 10, 0.1), { unit: 'm' })}${field(t('op.h'), num(`${key}.h`, o.h, 0.3, 4, 0.1), { unit: 'm' })}</div>
-          ${s.type === 'door' ? toggle(`${key}.open`, o.open, t('op.open')) : ''}
+          ${s.type === 'door' ? `<div class="field">${doorBtn(r, o, 'door-toggle-big')}</div>` : ''}
           <div class="row-gap">${btn('deleteSel', esc(t('common.delete')), 'danger-ghost small')}</div>`;
       } else if (s.kind === 'ac') {
         const a = Airly.store.ac(s.id);

@@ -271,6 +271,16 @@
       ui.sel = { kind: 'opening', id: o.id, roomId: r.id, type: d.type };
       store.commit('add'); render();
     },
+    toggleDoorOpen: (d) => {
+      const r = store.room(d.room);
+      const o = r && r.doors.find((x) => x.id === d.id);
+      if (!o) return;
+      o.open = !o.open;
+      store.commit('struct'); render();
+      toast(t(o.open ? 'door.opened' : 'door.closed'));
+      const b = document.querySelector(`[data-action="toggleDoorOpen"][data-id="${d.id}"]`);
+      if (b) b.focus({ preventScroll: true });
+    },
     studioBack: () => { ui.sel = null; render(); },
     rotateFurn: (d) => ui.rotateFurn(d.id),
     bestSpots: (d) => { ui.bestSpotsFor = ui.bestSpotsFor === d.id ? null : d.id; render(); },

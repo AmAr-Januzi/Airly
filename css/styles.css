@@ -683,3 +683,9 @@ dialog::backdrop { background: rgba(10, 10, 8, .45); }
   .r-note, .r-foot { color: #555; font-size: 8.5pt; }
   .r-foot { margin-top: 16px; border-top: 1px solid #ccc; padding-top: 6px; }
 }
+
+/* open / close door buttons in the designer side panel */
+.door-toggle.is-open { border-color: var(--good); color: var(--good); background: var(--good-bg); }
+.door-toggle-big { width: 100%; justify-content: center; font-weight: 650; }
+.op-mini .door-toggle { padding: 2px 8px; min-height: 30px; font-size: .78rem; white-space: nowrap; }
+.op-mini li { flex-wrap: wrap; }

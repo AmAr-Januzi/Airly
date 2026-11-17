@@ -231,7 +231,7 @@
       "calib.noAC": "Kein Gerät", "calib.run": "Beste Übereinstimmung finden", "calib.current": "Aktueller Kalibrierfaktor: ×{k}",
       "calib.result": "Mit den aktuellen Einstellungen endet die Simulation bei {cur}; die beste Übereinstimmung endet bei {best} (Sie haben {meas} gemessen).", "calib.suggest": "Vorschlag:",
       "calib.factor": "Wärmeverlustfaktor", "calib.apply": "Auf diesen Raum anwenden", "calib.applied": "Kalibrierung angewendet.", "calib.invalid": "Bitte alle Messfelder ausfüllen.",
-      "level.title": "Geschoss", "level.ground": "Erdgeschoss", "level.n": "{n}. Obergeschoss", "level.num": "Etage {n}", "level.add": "Geschoss hinzufügen", "level.remove": "Dieses Geschoss entfernen",
+      "level.title": "Geschoss", "level.ground": "Erdgeschoss", "level.n": "{n}. Obergeschoss", "level.num": "Etage {n}", "door.open": "Tür öffnen", "door.close": "Tür schließen", "door.opened": "Tür geöffnet", "door.closed": "Tür geschlossen", "level.add": "Geschoss hinzufügen", "level.remove": "Dieses Geschoss entfernen",
       "level.added": "{name} hinzugefügt — zeichnen Sie die Räume über dem Geschoss darunter.", "level.confirmRemove": "{name} entfernen?", "level.confirmRemoveRooms": "{name} und seine {n} Räume entfernen?",
       "level.show": "Angezeigte Geschosse", "level.all": "Alle Geschosse", "level.upTo": "Bis {name}",
       "undo.label": "Rückgängig", "undo.title": "Rückgängig (Strg+Z)", "redo.label": "Wiederholen", "redo.title": "Wiederholen (Strg+Y)", "undo.none": "Nichts zum Rückgängigmachen.", "redo.none": "Nichts zum Wiederholen.",

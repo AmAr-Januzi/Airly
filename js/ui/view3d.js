@@ -93,8 +93,23 @@
     const corners = [[r.x + m, r.y + m], [r.x + r.length - m, r.y + m], [r.x + r.length - m, r.y + r.width - m], [r.x + m, r.y + r.width - m]];
     const ac = h.acs.find((a) => a.roomId === id);
     const cx = r.x + r.length / 2, cz = r.y + r.width / 2;
-    let eye = corners[2];
-    if (ac) eye = corners.slice().sort((a, b) => Math.hypot(b[0] - ac.x, b[1] - ac.y) - Math.hypot(a[0] - ac.x, a[1] - ac.y))[0];
+    // prefer the corner farthest from the AC, but never stand inside furniture (you could not move)
+    const order = ac ? corners.slice().sort((a, b) => Math.hypot(b[0] - ac.x, b[1] - ac.y) - Math.hypot(a[0] - ac.x, a[1] - ac.y)) : [corners[2], corners[3], corners[1], corners[0]];
+    const lv = r.level || 0;
+    const free = (q) => walkable(h, lv, [], q[0], q[1]);
+    let eye = order.find(free);
+    if (!eye) {
+      // every corner is blocked: take the free spot in the room closest to the preferred corner
+      let best = null;
+      for (let x = r.x + BODY; x <= r.x + r.length - BODY + 1e-9; x += 0.2) {
+        for (let z = r.y + BODY; z <= r.y + r.width - BODY + 1e-9; z += 0.2) {
+          if (!free([x, z])) continue;
+          const d = Math.hypot(x - order[0][0], z - order[0][1]);
+          if (!best || d < best.d) best = { p: [x, z], d };
+        }
+      }
+      eye = best ? best.p : order[0];
+    }
     const look = ac ? [(ac.x + cx) / 2, (ac.y + cz) / 2] : [cx, cz];
     let fx = look[0] - eye[0], fz = look[1] - eye[1];
     const n = Math.hypot(fx, fz) || 1;
@@ -154,9 +169,10 @@
   function stairsAt(h, lv, x, z) {
     return stairsList(h).find((st) => ((st.level || 0) === lv || (st.level || 0) === lv - 1) && x >= st.x && x <= st.x + st.w && z >= st.y && z <= st.y + st.d) || null;
   }
-  function walkable(h, lv, ways, x, z) {
+  /* skipFurn: only walls count (used to walk out of furniture you are standing in) */
+  function walkable(h, lv, ways, x, z, skipFurn) {
     const m = 0.15;
-    if ((h.furniture || []).some((f) => f.kind !== 'stairs' && (f.level || 0) === lv && x > f.x - m && x < f.x + f.w + m && z > f.y - m && z < f.y + f.d + m)) return false;
+    if (!skipFurn && (h.furniture || []).some((f) => f.kind !== 'stairs' && (f.level || 0) === lv && x > f.x - m && x < f.x + f.w + m && z > f.y - m && z < f.y + f.d + m)) return false;
     if (stairsAt(h, lv, x, z)) return true;
     for (const r of h.rooms) {
       if ((r.level || 0) !== lv) continue;
@@ -184,7 +200,9 @@
         else nx += clamp(w.cx - nx, -pull, pull);
       });
     }
-    const ok = (x, z) => walkable(h, lv, ways, x, z);
+    // standing inside furniture (e.g. it was moved onto you): let you walk out of it instead of being stuck
+    const stuck = !walkable(h, lv, ways, cam.tx, cam.tz);
+    const ok = (x, z) => walkable(h, lv, ways, x, z, stuck);
     const px = cam.tx, pz = cam.tz;
     if (ok(nx, nz)) { cam.tx = nx; cam.tz = nz; }
     else if (ok(nx, cam.tz)) cam.tx = nx; // slide along the wall

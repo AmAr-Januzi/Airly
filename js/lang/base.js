@@ -203,6 +203,10 @@
     'op.w': ['Width', 'Gjerësia'],
     'op.h': ['Height', 'Lartësia'],
     'op.open': ['Door open', 'Dera e hapur'],
+    'door.open': ['Open door', 'Hap derën'],
+    'door.close': ['Close door', 'Mbyll derën'],
+    'door.opened': ['Door opened', 'Dera u hap'],
+    'door.closed': ['Door closed', 'Dera u mbyll'],
 
     /* environment */
     'env.title': ['Environmental conditions', 'Kushtet e mjedisit'],
