@@ -6,7 +6,7 @@
   const t = (k, p) => Airly.i18n.t(k, p);
   const esc = (s) => Airly.esc(s);
   const ui = Airly.ui;
-  const VIEWS = ['dashboard', 'designer', 'rooms', 'acs', 'compare', 'simulator', 'analysis', 'recommendations', 'energy', 'purchase', 'guide', 'maintenance', 'settings'];
+  const VIEWS = ['dashboard', 'designer', 'rooms', 'acs', 'simulator', 'analysis', 'recommendations', 'energy', 'purchase', 'guide', 'maintenance', 'settings'];
 
   /* ---------- Reminders ---------- */
   const DAY = 864e5;
@@ -79,6 +79,8 @@
 
   /* ---------- Routing ---------- */
   function show(view) {
+    // Compare Homes lives inside the Home Designer now: open it there and scroll to it
+    if (view === 'compare') { ui.compareOpen = true; ui.scrollToCompare = true; history.replaceState(null, '', '#designer'); view = 'designer'; }
     if (!VIEWS.includes(view)) view = 'dashboard';
     // leaving the designer while it shows 3D: close the 3D view (it lives inside the designer page)
     if (view !== ui.view && Airly.view3d && Airly.view3d.closeInline) { ui.view = view; Airly.view3d.closeInline(); }
@@ -94,6 +96,7 @@
     const main = document.getElementById('main');
     main.scrollTop = 0;
     window.scrollTo(0, 0);
+    if (ui.scrollToCompare) { ui.scrollToCompare = false; const c = document.getElementById('cmp-section'); if (c) c.scrollIntoView({ block: 'start' }); }
   }
   function render(focusKey) {
     const el = document.getElementById('view');

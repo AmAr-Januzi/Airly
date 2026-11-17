@@ -306,8 +306,16 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 .view3d-dialog.inline .v3d-tools [data-v3d="close"] { display: none; }
 .studio-stage { position: relative; min-width: 0; min-height: 0; height: 100%; }
 .studio-stage .plan-area { height: 100%; min-height: 0; border: 0; border-radius: 0; }
-.studio-mode { position: absolute; top: 12px; left: 12px; z-index: 3; box-shadow: var(--shadow); background: var(--surface); }
-.studio-mode .seg svg { vertical-align: -4px; }
+.studio-stage .plan-3d-btn { top: 12px; right: 12px; }
+/* slim, rounded scrollbars in the side panels; they fade in when you point at the panel */
+.studio-panel, .v3d-side { scrollbar-width: thin; scrollbar-color: transparent transparent; scroll-behavior: smooth; overscroll-behavior: contain; scrollbar-gutter: stable; transition: scrollbar-color .2s; }
+.studio-panel:hover, .studio-panel:focus-within, .v3d-side:hover, .v3d-side:focus-within { scrollbar-color: color-mix(in srgb, var(--muted) 55%, transparent) transparent; }
+.studio-panel::-webkit-scrollbar, .v3d-side::-webkit-scrollbar { width: 8px; }
+.studio-panel::-webkit-scrollbar-track, .v3d-side::-webkit-scrollbar-track { background: transparent; }
+.studio-panel::-webkit-scrollbar-thumb, .v3d-side::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+.studio-panel:hover::-webkit-scrollbar-thumb, .v3d-side:hover::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--muted) 55%, transparent); }
+.studio-panel::-webkit-scrollbar-thumb:hover, .v3d-side::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .studio-panel, .v3d-side { scroll-behavior: auto; } }
 .studio-zoom { position: absolute; bottom: 12px; left: 12px; z-index: 3; display: flex; gap: 6px; }
 .studio-zoom .btn { box-shadow: var(--shadow); background: var(--surface); }
 .studio-panel { border-left: 1px solid var(--border); background: var(--surface); padding: 14px 16px 18px; overflow-y: auto; height: 100%; min-height: 0; }

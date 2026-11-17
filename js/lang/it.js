@@ -231,7 +231,7 @@
       "calib.noAC": "Nessun climatizzatore", "calib.run": "Trova la corrispondenza migliore", "calib.current": "Fattore di calibrazione attuale: ×{k}",
       "calib.result": "Con le impostazioni attuali la simulazione finisce a {cur}; la corrispondenza migliore finisce a {best} (hai misurato {meas}).", "calib.suggest": "Consigliato:",
       "calib.factor": "fattore di dispersione", "calib.apply": "Applica a questa stanza", "calib.applied": "Calibrazione applicata.", "calib.invalid": "Compila tutti i campi della misura.",
-      "level.title": "Piano", "level.ground": "Piano terra", "level.n": "Piano {n}", "level.add": "Aggiungi piano", "level.remove": "Rimuovi questo piano",
+      "level.title": "Piano", "level.ground": "Piano terra", "level.n": "Piano {n}", "level.num": "Piano {n}", "level.add": "Aggiungi piano", "level.remove": "Rimuovi questo piano",
       "level.added": "{name} aggiunto — disegna le stanze sopra il piano inferiore.", "level.confirmRemove": "Rimuovere {name}?", "level.confirmRemoveRooms": "Rimuovere {name} e le sue {n} stanze?",
       "level.show": "Piani da mostrare", "level.all": "Tutti i piani", "level.upTo": "Fino a {name}",
       "undo.label": "Annulla", "undo.title": "Annulla (Ctrl+Z)", "redo.label": "Ripeti", "redo.title": "Ripeti (Ctrl+Y)", "undo.none": "Niente da annullare.", "redo.none": "Niente da ripetere.",

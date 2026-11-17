@@ -106,7 +106,7 @@
   };
 
   function levelName(k) {
-    return k === 0 ? t('level.ground') : t('level.n', { n: k });
+    return t('level.num', { n: k + 1 }); // Floor 1, Floor 2, Floor 3 …
   }
   function roomName(r) {
     if (!r) return '—';

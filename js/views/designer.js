@@ -75,7 +75,8 @@
     render(el) {
       // 3D: the 3D view takes the same place at the top of the page, with its own panel on the right
       if (Airly.ui.designer3d && S().rooms.length) {
-        el.innerHTML = `<h1 class="sr-only">${esc(t('nav.designer'))}</h1><section class="studio studio-3d card" id="studio-3d" aria-label="3D"></section>${this.traceCard()}`;
+        el.innerHTML = `<h1 class="sr-only">${esc(t('nav.designer'))}</h1><section class="studio studio-3d card" id="studio-3d" aria-label="3D"></section>${this.traceCard()}${Airly.compareSection.html()}`;
+        Airly.compareSection.bind(el);
         const host = el.querySelector('#studio-3d');
         if (!Airly.view3d.attach(host)) Airly.view3d.open(host);
         return;
@@ -84,10 +85,7 @@
       el.innerHTML = `<h1 class="sr-only">${esc(t('nav.designer'))}</h1>
         <section class="studio card" aria-label="${esc(t('designer.tools'))}">
           <div class="studio-stage">
-            <div class="studio-mode segmented" role="group" aria-label="2D / 3D">
-              <button type="button" class="seg active" aria-pressed="true">2D</button>
-              <button type="button" class="seg" data-action="designer3d" aria-pressed="false" title="${esc(t('v3d.open'))}">${Airly.kit.CUBE} 3D</button>
-            </div>
+            <button type="button" class="btn plan-3d-btn" data-action="designer3d" title="${esc(t('v3d.open'))}">${Airly.kit.CUBE}<span>3D</span><span class="sr-only"> — ${esc(t('v3d.open'))}</span></button>
             <div class="studio-zoom">
               ${btn('zoomOut', '−', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomOut'))}"`)}
               ${btn('zoomIn', '+', 'icon', { plan: 'designer' }).replace('<button', `<button aria-label="${esc(t('plan.zoomIn'))}"`)}
@@ -98,7 +96,9 @@
           <aside class="studio-panel" id="inspector" aria-live="polite" aria-label="${esc(t('insp.title'))}"></aside>
         </section>
         ${S().rooms.length ? '' : this.templatePicker()}
-        ${this.traceCard()}`;
+        ${this.traceCard()}
+        ${Airly.compareSection.html()}`;
+      Airly.compareSection.bind(el);
       mountPlan('designer', el.querySelector('#designer-plan'), 'design');
       this.inspector();
     },

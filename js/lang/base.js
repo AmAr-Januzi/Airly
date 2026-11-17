@@ -691,6 +691,7 @@
     'level.title': ['Floor', 'Kati'],
     'level.ground': ['Ground floor', 'Përdhesa'],
     'level.n': ['Floor {n}', 'Kati {n}'],
+    'level.num': ['Floor {n}', 'Kati {n}'],
     'level.add': ['Add floor', 'Shto kat'],
     'level.remove': ['Remove this floor', 'Hiq këtë kat'],
     'level.added': ['{name} added — draw its rooms on top of the floor below.', '{name} u shtua — vizatoni dhomat mbi katin e poshtëm.'],

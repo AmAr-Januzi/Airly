@@ -1,8 +1,8 @@
-/* Airly — Compare homes screen */
+/* Airly — Compare homes: a fold-open section at the bottom of the Home Designer */
 (function () {
   'use strict';
   const Airly = window.Airly;
-  const { t, S, P, esc, F, btn, card, estimateNote, head, views, scoreBadge } = Airly.kit;
+  const { t, S, P, esc, F, btn, scoreBadge } = Airly.kit;
   const MAX = 4;
 
   /* Only the rooms (and their ACs, walls and furniture) of one floor; 'all' keeps the whole home */
@@ -18,8 +18,12 @@
     return hh;
   }
 
-  views.compare = {
-    render(el) {
+  Airly.compareSection = {
+    /* closed: just the heading (nothing is calculated); open: pickers and the side-by-side table */
+    html() {
+      const open = !!Airly.ui.compareOpen;
+      const wrap = (body) => `<details class="card trace-card cmp-section" id="cmp-section"${open ? ' open' : ''}><summary><span aria-hidden="true">⚖</span> ${esc(t('nav.compare'))}</summary><div class="card-body">${body}</div></details>`;
+      if (!open) return wrap('');
       const h = S(), p = P();
       const saved = Object.values(Airly.store.projects()).filter((x) => x.id !== h.id);
       const options = [{ key: 'current', name: (h.name || t('home.defaultName')) + ' (' + t('proj.open') + ')' }].concat(saved.map((x) => ({ key: 'p:' + x.id, name: x.name || t('home.defaultName') })));
@@ -62,10 +66,10 @@
       });
       const best = (f, low) => { const vals = rows.map(f); const m = low ? Math.min(...vals) : Math.max(...vals); return (v) => (rows.length > 1 && v === m ? ' class="best"' : ''); };
       const cost = best((r) => r.y.cost, true), comf = best((r) => r.comfort), bad = best((r) => r.bad, true);
-      el.innerHTML = head('nav.compare', 'cmp.lede') + card(t('cmp.pick'), `<div class="cmp-slots">${pickers}</div>
+      return wrap(`<p class="muted">${esc(t('cmp.lede'))}</p><h3>${esc(t('cmp.pick'))}</h3><div class="cmp-slots">${pickers}</div>
         ${slots.length < MAX ? `<div class="row-gap">${btn('cmpAdd', '＋ ' + esc(t('cmp.add')), 'ghost small')}</div>` : ''}
-        ${saved.length ? '' : `<p class="muted small">${esc(t('cmp.noSaved'))}</p>`}`) +
-        (rows.length ? card(t('cmp.result'), `<div class="table-wrap" tabindex="0"><table class="cmp-table"><thead><tr><th scope="col"><span class="sr-only">${esc(t('cmp.result'))}</span></th>${rows.map((r) => `<th scope="col">${esc(r.name)}<br><span class="muted small">${esc(r.floorName)}</span></th>`).join('')}</tr></thead><tbody>
+        ${saved.length ? '' : `<p class="muted small">${esc(t('cmp.noSaved'))}</p>`}` +
+        (rows.length ? `<h3>${esc(t('cmp.result'))}</h3><div class="table-wrap" tabindex="0"><table class="cmp-table"><thead><tr><th scope="col"><span class="sr-only">${esc(t('cmp.result'))}</span></th>${rows.map((r) => `<th scope="col">${esc(r.name)}<br><span class="muted small">${esc(r.floorName)}</span></th>`).join('')}</tr></thead><tbody>
           <tr><th scope="row">${esc(t('dash.rooms'))}</th>${rows.map((r) => `<td>${r.an.rooms.length} · ${F().num(r.an.totals.area, 0)} m²</td>`).join('')}</tr>
           <tr><th scope="row">${esc(t('dash.acUnits'))}</th>${rows.map((r) => `<td>${r.acs} · ${esc(F().btu(r.an.totals.inst))}</td>`).join('')}</tr>
           <tr><th scope="row">${esc(t('report.reqCool'))}</th>${rows.map((r) => `<td>${esc(F().btu(r.an.totals.req))}</td>`).join('')}</tr>
@@ -73,9 +77,18 @@
           <tr><th scope="row">${esc(t('year.total'))}</th>${rows.map((r) => `<td${cost(r.y.cost)}>${esc(F().money(r.y.cost, 0))} · ${F().num(r.y.kWh, 0)} kWh</td>`).join('')}</tr>
           <tr><th scope="row">${esc(t('comfort.avg'))}</th>${rows.map((r) => `<td${comf(r.comfort)}>${scoreBadge(r.comfort)}</td>`).join('')}</tr>
           <tr><th scope="row">${esc(t('dash.problemRooms'))}</th>${rows.map((r) => `<td${bad(r.bad)}>${r.bad}</td>`).join('')}</tr>
-          </tbody></table></div><p class="muted small">${esc(t('cmp.note', { climate: t('climate.' + (base.climate || 'tirana')) }))}</p>`, 'table-card') : '') + estimateNote();
-
-      el.querySelectorAll('select[data-cmp]').forEach((s) => s.addEventListener('change', () => {
+          </tbody></table></div><p class="muted small">${esc(t('cmp.note', { climate: t('climate.' + (base.climate || 'tirana')) }))}</p>` : ''));
+    },
+    bind(root) {
+      const box = root.querySelector('#cmp-section');
+      if (!box) return;
+      box.addEventListener('toggle', () => {
+        if (!!Airly.ui.compareOpen === box.open) return;
+        Airly.ui.compareOpen = box.open;
+        Airly.render();
+      });
+      const slots = Airly.ui.compareSlots || [];
+      root.querySelectorAll('select[data-cmp]').forEach((s) => s.addEventListener('change', () => {
         const slot = slots[+s.dataset.idx];
         if (s.dataset.cmp === 'home') { slot.home = s.value; slot.floor = 'all'; } // a new home starts on "All floors"
         else slot.floor = s.value === 'all' ? 'all' : +s.value;
