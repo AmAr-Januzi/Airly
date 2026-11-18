@@ -325,6 +325,8 @@ tr.total th, tr.total td { font-weight: 700; background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) { .studio-panel, .v3d-side { scroll-behavior: auto; } }
 .studio-panel { border-left: 1px solid var(--border); background: var(--surface); padding: 14px 16px 18px; overflow-y: auto; height: 100%; min-height: 0; }
 .studio-panel h2 { margin-bottom: 10px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.panel-head h2 { margin: 0; }
 .studio-panel .field-row { gap: 0 8px; }
 .studio-back { margin: -4px 0 8px -8px; }
 .studio-sec { border-top: 1px solid var(--border); padding: 12px 0 4px; margin-top: 10px; }

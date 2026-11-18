@@ -51,7 +51,8 @@
       wallInfo = `<p class="wall-status${warn ? ' is-warn' : ''}" role="${warn ? 'alert' : 'note'}"><span aria-hidden="true">${warn ? '⚠' : '👆'}</span> ${esc(t(warn ? 'studio.clickWall' : 'studio.clickWallHint'))}</p>`;
     }
     const opBtn = (type, icon, key) => `<button type="button" class="tile${wr ? '' : ' is-idle'}" data-action="studioOpening" data-type="${type}"><span class="tile-icon" aria-hidden="true">${icon}</span><span>${esc(t(key))}</span></button>`;
-    return `<h2>${esc(t('studio.build'))}</h2>
+    return `<div class="panel-head"><h2>${esc(t('studio.build'))}</h2>
+        <button type="button" class="btn primary small" data-action="saveHome"><span aria-hidden="true">💾</span> ${esc(t('top.save'))}</button></div>
       <section class="studio-sec"><h3>${esc(t('studio.rooms'))}</h3>
         ${levelTabs(true)}
         <div class="add-room-row">
