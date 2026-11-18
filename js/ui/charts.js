@@ -6,7 +6,7 @@
 
   function seriesColor(i) {
     const v = getComputedStyle(document.documentElement).getPropertyValue('--s' + ((i % 8) + 1)).trim();
-    return v || '#7C3AED';
+    return v || '#1570D6';
   }
   function niceTicks(min, max, count) {
     if (min === max) { min -= 1; max += 1; }
