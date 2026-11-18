@@ -34,8 +34,8 @@
   }
   function tempColor(T, target) {
     const dark = document.documentElement.dataset.themeResolved === 'dark';
-    const neutral = dark ? '#3a3a37' : '#ecebe6';
-    const cool = dark ? '#3987e5' : '#5598e7';
+    const neutral = dark ? '#3a3a37' : '#EEF4F7';
+    const cool = dark ? '#3987e5' : '#38B6EE';
     const warm = dark ? '#d95926' : '#eb6834';
     const d = T - target;
     if (Math.abs(d) <= 0.5) return neutral;

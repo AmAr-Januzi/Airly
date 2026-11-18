@@ -86,10 +86,9 @@
   /* ---------- Theme ---------- */
   const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   function applyTheme() {
-    const pref = store.prefs.theme;
-    const dark = pref === 'dark' || (pref === 'auto' && mq && mq.matches);
-    document.documentElement.dataset.theme = pref === 'auto' ? '' : pref;
-    document.documentElement.dataset.themeResolved = dark ? 'dark' : 'light';
+    // one look for everyone: the Airly palette (light background, deep navy sidebar)
+    document.documentElement.dataset.theme = '';
+    document.documentElement.dataset.themeResolved = 'light';
     // the 3D view paints with its own copy of the colours: refresh them
     if (Airly.view3d && Airly.view3d.recolor) Airly.view3d.recolor();
   }

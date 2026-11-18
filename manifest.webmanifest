@@ -5,8 +5,8 @@
   "start_url": "./index.html#dashboard",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f5f2",
-  "theme_color": "#2a78d6",
+  "background_color": "#F5FAFD",
+  "theme_color": "#0D2B3E",
   "lang": "en",
   "categories": ["utilities", "lifestyle"],
   "icons": [
